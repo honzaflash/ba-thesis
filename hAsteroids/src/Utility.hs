@@ -1,0 +1,87 @@
+module Utility where
+
+
+import Components
+
+import Linear
+import Control.Exception
+import System.IO ( stderr, hPrint )
+import System.Exit ( die ) 
+import Foreign.C.Types (CDouble, CInt (CInt))
+import System.Random.Stateful
+import Data.List
+import Control.Monad
+import qualified SDL
+
+
+{- Global static variables -}
+windowWidth, windowHeight :: CInt
+windowWidth = 1024
+windowHeight = 768
+
+targetFPS = 60
+targetIterationTime = 1000 `div` targetFPS
+
+
+{- Helper functions -}
+
+-- cap velocity to max speed
+capVelocity :: CDouble -> Velocity -> Velocity
+capVelocity maxSpeed (Velocity vect) = Velocity $
+    if norm vect > maxSpeed then maxSpeed *^ signorm vect else vect
+
+-- has key been pressed
+keyIsPressed :: SDL.Keycode -> SDL.EventPayload -> Bool
+keyIsPressed keycode (SDL.KeyboardEvent event) =
+    SDL.keyboardEventKeyMotion event == SDL.Pressed &&
+    not (SDL.keyboardEventRepeat event) &&
+    SDL.keysymKeycode (SDL.keyboardEventKeysym event) == keycode
+keyIsPressed _ _ = False 
+
+
+{- stateful random generator initializers -}
+
+-- initialize a random number generator
+initStatefulRanGen :: UniformRange a => Int -> a -> a -> IO (IO a)
+initStatefulRanGen seed a b = do
+    generator <- newIOGenM $ mkStdGen seed
+    let generate = uniformRM (a, b)
+    pure $ generate generator
+
+-- initialize 2D vector generator
+initV2generator :: UniformRange a => Int -> Int -> (a, a) -> (a, a) -> IO (IO (V2 a))
+initV2generator  seed1 seed2 (a1, b1) (a2, b2) = 
+    liftM2 (liftM2 V2)
+           (initStatefulRanGen seed1 a1 b1)
+           (initStatefulRanGen seed2 a2 b2)
+
+initRandomPositionGenerator :: Int -> Int -> IO (IO Position)
+initRandomPositionGenerator seed1 seed2 =
+    fmap Position <$>
+            initV2generator seed1
+                            seed2 
+                            (0, fromIntegral windowWidth)
+                            (0, fromIntegral windowHeight)
+
+initRandomVelocityGenerator :: Int -> Int -> IO (IO Velocity)
+initRandomVelocityGenerator seed1 seed2 =
+    fmap Velocity <$>
+            initV2generator seed1 seed2 (-5, 5) (-5, 5)
+
+
+{- IO Exception handlers -}
+
+-- handle every nonfatal exception
+ioOrDefault :: a -> IO a -> IO a
+ioOrDefault def expr =
+    expr `catch` \e -> do
+                         hPrint stderr (e :: SomeException)
+                         pure def
+
+-- handle every fatal exception
+ioOrDie :: String -> IO a -> IO a
+ioOrDie msg expr =
+    expr `catch` \e -> do
+                         hPrint stderr (e :: SomeException)
+                         die msg
+

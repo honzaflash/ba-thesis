@@ -1,0 +1,57 @@
+name:                hAsteroids
+version:             0.1.0.0
+github:              "honzaflash/hAsteroids"
+license:             BSD3
+author:              "Jan Rychlý"
+copyright:           "2021 Jan Rychlý"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/honzaflash/hAsteroids#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- sdl2 >= 2.5
+- sdl2-image
+- sdl2-mixer
+- sdl2-ttf
+- apecs
+- random >= 1.2
+- unordered-containers
+- linear
+- lens
+- hashable
+
+library:
+  source-dirs: src
+
+executables:
+  hAsteroids-exe:
+    main:         Main.hs
+    source-dirs:  app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - hAsteroids
+
+tests:
+  hAsteroids-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - hAsteroids
