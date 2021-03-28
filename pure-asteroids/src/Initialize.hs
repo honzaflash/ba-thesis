@@ -9,9 +9,15 @@ import Linear
 initializeWorld :: World
 initializeWorld =
     W
-    { wShip = Ship (Position $ V2 0 0) (Velocity $ V2 5 5) (pi / 4 * 3)
+    { wShip = Ship (Position $ V2 10 10) (Velocity $ V2 5 5) (pi / 4 * 3) 3
     , wAsteroids =
-        HM.fromList $ zip [1..] $ replicate 1000 $ Asteroid 1 (Position $ V2 100 100) (Velocity $ V2 5 5) 0 128
+        HM.fromList [(id, Asteroid 
+                            id 
+                            (Position $ V2 200 200) 
+                            (Velocity $ V2 (5 * sin (fromIntegral id)) (5 * cos (fromIntegral $ id + 42))) 
+                            0 
+                            64
+                      ) | id <- [0..999] ]
     , wBullets = HM.empty
     , wTime = 0
     , wScore = 0

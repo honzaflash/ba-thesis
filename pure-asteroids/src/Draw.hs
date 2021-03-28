@@ -12,7 +12,7 @@ drawWorld renderer w = do
     SDL.rendererDrawColor renderer SDL.$= V4 0 0 0 0
     SDL.clear renderer
     SDL.rendererDrawColor renderer SDL.$= V4 255 255 255 255
-    mapM_ (drawAsteroid renderer) $ HM.elems $ wAsteroids w
+    mapM_ (drawAsteroid renderer) $ wAsteroids w
     drawShip renderer $ wShip w
 
     SDL.present renderer

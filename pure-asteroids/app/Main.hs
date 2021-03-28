@@ -28,7 +28,7 @@ main = do
 
     SDL.showWindow window
 
-    gameLoop renderer 0 initializeWorld
+    gameLoop renderer 0 16 mempty initializeWorld
 
     SDL.destroyWindow window
     SDL.quit

@@ -4,40 +4,54 @@ module Step where
 import Types
 
 import Linear
--- import Control.Lens -- TODO  transfer to using lenses!
+-- import Control.Lens -- TODO  transfer to using lenses
 import qualified Data.HashMap.Strict as HM
 import Data.HashMap.Strict ((!))
 
 
--- TODO  add keyboard state... what about single key presses? <- shooting
-stepWorld :: Time -> WorldEvents -> World -> World
+-- TODO  add keyboard events machinery -> different module
+stepWorld :: Time -> WorldEvents -> World -> (WorldEvents, World)
 stepWorld deltaTime events oldW =
-    let astEvents = forAsteroids events in
+    let
+        -- TODO  recieving and sending events is chaos
+        (eventsS, newShip) = updateShip deltaTime oldW $ wShip oldW
+        astEvents = forAsteroids events
+        newAsteroids = updateAsteroids deltaTime astEvents $ wAsteroids oldW
+        (eventsB, newBullets) = (mempty, wBullets oldW)
+        newTime = wTime oldW
+        -- (eventsU, newUfo) = updateUfos TODO
+        newScore = wScore oldW
+    in
+        (,) (eventsS <> eventsB)
         oldW
-        { wShip = updateShip deltaTime $ wShip oldW
-        , wAsteroids = updateAsteroids deltaTime astEvents $ wAsteroids oldW
-        , wBullets = wBullets oldW
-        , wTime = wTime oldW
-        , wScore = wScore oldW
+        { wShip = newShip
+        , wAsteroids = newAsteroids
+        , wBullets = newBullets
+        , wTime = newTime
+        , wScore = newScore
         }
 
 
-updateShip :: Time -> Ship -> Ship
-updateShip dT oldS =
+updateShip :: Time -> World -> Ship -> (WorldEvents, Ship)
+updateShip dT w oldS =
+    (,) mempty
     oldS
     { shipPosition = move dT (shipPosition oldS) (shipVelocity oldS)
-    , shipVelocity = Velocity $ V2 0 0 -- propel function
-    , shipAngle    = 0 -- steer function
+    , shipVelocity = Velocity $ V2 1 1 -- TODO thrust function
+    , shipAngle    = 0 -- TODO steer function
     }
 
+    where
+        collison = undefined -- foldl /genEvents/ $ wAsteroids w
 
-updateAsteroids :: Time -> [AsteroidEvent] -> Asteroids -> Asteroids 
+
+updateAsteroids :: Time -> [AsteroidEvent] -> Asteroids -> Asteroids
 updateAsteroids dT events oldAs =
-    stepAsteroids dT $ foldl resolveDestruction oldAs events
+    moveAsteroids dT $ foldl resolveDestruction oldAs events
 
 
 resolveDestruction :: Asteroids -> AsteroidEvent -> Asteroids
-resolveDestruction asteroids (Destroy id)
+resolveDestruction asteroids (BreakE id)
     | minAsteroidSize == astSize (asteroids ! id) = break id asteroids 
     | otherwise = HM.delete id asteroids
     where
@@ -64,8 +78,8 @@ resolveDestruction asteroids (Destroy id)
         insertAsteroid a = HM.insert (astId a) a
 
 
-stepAsteroids :: Time -> Asteroids -> Asteroids
-stepAsteroids dT = HM.map (stepAsteroid dT)
+moveAsteroids :: Time -> Asteroids -> Asteroids
+moveAsteroids dT = HM.map (stepAsteroid dT)
     where
         stepAsteroid dT a =
             a { astPosition = move dT (astPosition a) (astVelocity a) }
@@ -73,4 +87,5 @@ stepAsteroids dT = HM.map (stepAsteroid dT)
 
 -- returns new position
 move :: Time -> Position -> Velocity -> Position
-move dT position (Velocity v) = kmap (+ fromIntegral dT *^ v) position
+move dT position (Velocity v) = kmap (+ fromIntegral dT / 100 *^ v) position
+    -- TODO wrap

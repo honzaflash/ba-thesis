@@ -24,6 +24,7 @@ data Ship =
     { shipPosition :: Position 
     , shipVelocity :: Velocity
     , shipAngle :: Angle
+    , shipLives :: Int
     }
     deriving Show
 
@@ -38,6 +39,8 @@ data Asteroid =
     }
     deriving Show
 
+type AsteroidSize = Int
+
 minAsteroidSize, initAsteroidSize :: Int 
 minAsteroidSize = 32
 initAsteroidSize = 128
@@ -48,9 +51,12 @@ data Bullet =
     { bulletId :: Int
     , bulletPosition :: Position
     , bulletVelocity :: Velocity
+    , bulletShooter :: BulletShooter
     , bulletTTL :: Double
     }
     deriving Show
+
+data BulletShooter = ShotByShip | ShotByUfo deriving Show
 
 class Kinetics a where
     kmap :: (V2 Double -> V2 Double) -> a -> a
@@ -65,28 +71,44 @@ newtype Velocity = Velocity  { unvelocity :: V2 Double }
 instance Kinetics Velocity where
     kmap f (Velocity p) = Velocity $ f p
 
-
 type Angle = Double
-    -- deriving (Show, Eq, Ord)
-
-type AsteroidSize = Int
-    -- deriving (Show, Eq, Ord)
 
 type Time = Int
-    -- deriving (Show, Eq, Ord, Num, Enum, Real, Integral)
 
 type Score = Int
-    -- deriving (Show, Eq, Ord)
 
--- can be turned into 'data' for addressing other entity types
-newtype WorldEvents =
+
+data WorldEvents =
     WorldEvents
     { forAsteroids :: [AsteroidEvent]
+    , forShip :: [ShipEvent]
+    , forUfos :: [UfosEvent]
+    , forScore :: [ScoreEvent]
     }
     deriving Show
+instance Semigroup WorldEvents where
+    (WorldEvents ae1 se1 ue1 scre1) <> (WorldEvents ae2 se2 ue2 scre2) =
+        WorldEvents (ae1 <> ae2) (se1 <> se2) (ue1 <> ue2) (scre1 <> scre2)
+instance Monoid WorldEvents where
+    mempty = WorldEvents [] [] [] []
 
--- can be turned into 'data' for more kinds of events
+-- TODO ?
+-- worldEvents :: WorldEvent e => e -> WorldEvents
+
+
 newtype AsteroidEvent = 
-    Destroy Int
+    BreakE Int
+    deriving Show
+
+data ShipEvent = 
+    HitE | GainLifeE
+    deriving Show
+
+newtype UfosEvent = 
+    DestroyE Int
+    deriving Show
+
+newtype ScoreEvent = 
+    IncreaseE Int
     deriving Show
 
