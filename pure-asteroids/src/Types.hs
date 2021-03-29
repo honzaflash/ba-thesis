@@ -1,41 +1,44 @@
-
+{-# LANGUAGE TemplateHaskell #-}
 -- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Types where
 
 
 import Linear
--- is .Lazy better?
+-- is .Lazy better? Maybe benchmark this
 import qualified Data.HashMap.Strict as HM
+import Control.Lens
 
 
 data World =
-    W
-    { wShip :: Ship 
-    , wAsteroids :: Asteroids
-    , wBullets :: Bullets
---    , wAliens :: Aliens
-    , wTime :: Time
-    , wScore :: Score
+    World
+    { _wShip :: Ship 
+    , _wAsteroids :: Asteroids
+    , _wBullets :: Bullets
+--    , _wUfos :: Ufos
+    , _wTime :: Time
+    , _wScore :: Score
     }
     deriving Show
 
+
 data Ship =
     Ship 
-    { shipPosition :: Position 
-    , shipVelocity :: Velocity
-    , shipAngle :: Angle
-    , shipLives :: Int
+    { _sPosition :: Position 
+    , _sVelocity :: Velocity
+    , _sAngle :: Angle
+    , _sLives :: Int
     }
     deriving Show
+
 
 type Asteroids = HM.HashMap Int Asteroid
 data Asteroid =
     Asteroid
-    { astId :: Int
-    , astPosition :: Position 
-    , astVelocity :: Velocity
-    , astAngle :: Angle
-    , astSize :: AsteroidSize
+    { _aId :: Int
+    , _aPosition :: Position 
+    , _aVelocity :: Velocity
+    , _aAngle :: Angle
+    , _aSize :: AsteroidSize
     }
     deriving Show
 
@@ -45,45 +48,44 @@ minAsteroidSize, initAsteroidSize :: Int
 minAsteroidSize = 32
 initAsteroidSize = 128
 
+
 type Bullets = HM.HashMap Int Bullet
 data Bullet =
     Bullet
-    { bulletId :: Int
-    , bulletPosition :: Position
-    , bulletVelocity :: Velocity
-    , bulletShooter :: BulletShooter
-    , bulletTTL :: Double
+    { _bId :: Int
+    , _bPosition :: Position
+    , _bVelocity :: Velocity
+    , _bShooter :: BulletShooter
+    , _bTtl :: Double
     }
     deriving Show
 
 data BulletShooter = ShotByShip | ShotByUfo deriving Show
 
-class Kinetics a where
-    kmap :: (V2 Double -> V2 Double) -> a -> a
 
-newtype Position = Position { unposition :: V2 Double }
+newtype Position = Position { _pVect :: V2 Double }
     deriving Show
-instance Kinetics Position where
-    kmap f (Position p) = Position $ f p
 
-newtype Velocity = Velocity  { unvelocity :: V2 Double }
+
+newtype Velocity = Velocity  { _vVect :: V2 Double }
     deriving Show
-instance Kinetics Velocity where
-    kmap f (Velocity p) = Velocity $ f p
+
 
 type Angle = Double
 
+
 type Time = Int
+
 
 type Score = Int
 
 
 data WorldEvents =
     WorldEvents
-    { forAsteroids :: [AsteroidEvent]
-    , forShip :: [ShipEvent]
-    , forUfos :: [UfosEvent]
-    , forScore :: [ScoreEvent]
+    { _forAsteroids :: [AsteroidEvent]
+    , _forShip :: [ShipEvent]
+    , _forUfos :: [UfosEvent]
+    , _forScore :: [ScoreEvent]
     }
     deriving Show
 instance Semigroup WorldEvents where
@@ -92,13 +94,11 @@ instance Semigroup WorldEvents where
 instance Monoid WorldEvents where
     mempty = WorldEvents [] [] [] []
 
--- TODO ?
--- worldEvents :: WorldEvent e => e -> WorldEvents
-
 
 newtype AsteroidEvent = 
     BreakE Int
     deriving Show
+
 
 data ShipEvent = 
     HitE | GainLifeE
@@ -108,7 +108,25 @@ newtype UfosEvent =
     DestroyE Int
     deriving Show
 
+
 newtype ScoreEvent = 
     IncreaseE Int
     deriving Show
 
+
+makeLenses ''WorldEvents
+makeLenses ''World
+makeLenses ''Ship
+makeLenses ''Asteroid
+makeLenses ''Bullet
+-- makeLenses ''Ufos
+makeLenses ''Position
+makeLenses ''Velocity
+
+
+worldEventsA :: AsteroidEvent -> WorldEvents
+worldEventsA ae = mempty & forAsteroids %~ (ae :)
+
+worldEventsS = undefined
+worldEventsU = undefined
+worldEventsScr = undefined

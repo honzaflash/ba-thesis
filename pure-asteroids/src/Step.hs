@@ -4,9 +4,9 @@ module Step where
 import Types
 
 import Linear
--- import Control.Lens -- TODO  transfer to using lenses
 import qualified Data.HashMap.Strict as HM
 import Data.HashMap.Strict ((!))
+import Control.Lens
 
 
 -- TODO  add keyboard events machinery -> different module
@@ -14,21 +14,21 @@ stepWorld :: Time -> WorldEvents -> World -> (WorldEvents, World)
 stepWorld deltaTime events oldW =
     let
         -- TODO  recieving and sending events is chaos
-        (eventsS, newShip) = updateShip deltaTime oldW $ wShip oldW
-        astEvents = forAsteroids events
-        newAsteroids = updateAsteroids deltaTime astEvents $ wAsteroids oldW
-        (eventsB, newBullets) = (mempty, wBullets oldW)
-        newTime = wTime oldW
+        (eventsS, newShip) = updateShip deltaTime oldW $ oldW ^. wShip
+        astEvents = events ^. forAsteroids
+        newAsteroids = updateAsteroids deltaTime astEvents $ oldW ^. wAsteroids
+        (eventsB, newBullets) = (mempty, oldW ^. wBullets)
+        newTime = oldW ^. wTime
         -- (eventsU, newUfo) = updateUfos TODO
-        newScore = wScore oldW
+        newScore = oldW ^. wScore
     in
         (,) (eventsS <> eventsB)
         oldW
-        { wShip = newShip
-        , wAsteroids = newAsteroids
-        , wBullets = newBullets
-        , wTime = newTime
-        , wScore = newScore
+        { _wShip = newShip
+        , _wAsteroids = newAsteroids
+        , _wBullets = newBullets
+        , _wTime = newTime
+        , _wScore = newScore
         }
 
 
@@ -36,9 +36,9 @@ updateShip :: Time -> World -> Ship -> (WorldEvents, Ship)
 updateShip dT w oldS =
     (,) mempty
     oldS
-    { shipPosition = move dT (shipPosition oldS) (shipVelocity oldS)
-    , shipVelocity = Velocity $ V2 1 1 -- TODO thrust function
-    , shipAngle    = 0 -- TODO steer function
+    { _sPosition = move dT (oldS ^. sVelocity) (oldS ^. sPosition)
+    , _sVelocity = Velocity $ V2 1 1 -- TODO thrust function
+    , _sAngle    = 0 -- TODO steer function
     }
 
     where
@@ -52,40 +52,40 @@ updateAsteroids dT events oldAs =
 
 resolveDestruction :: Asteroids -> AsteroidEvent -> Asteroids
 resolveDestruction asteroids (BreakE id)
-    | minAsteroidSize == astSize (asteroids ! id) = break id asteroids 
+    | minAsteroidSize == (asteroids ! id) ^. aSize = break id asteroids 
     | otherwise = HM.delete id asteroids
     where
         break id asteroids =
             let (Asteroid _ pos vel _ size) = asteroids ! id
                 part1 =
                     Asteroid
-                    { astId = id
-                    , astPosition = pos
-                    , astVelocity = kmap (\v -> v + perp v) vel
-                    , astAngle = 0
-                    , astSize = size `div` 2
+                    { _aId = id
+                    , _aPosition = pos
+                    , _aVelocity = vel & vVect %~ (\v -> v + perp v)
+                    , _aAngle = 0
+                    , _aSize = size `div` 2
                     }
                 part2 =
                     Asteroid
-                    { astId = (+1) $ maximum $ HM.keys asteroids
-                    , astPosition = pos
-                    , astVelocity = kmap (\v -> v - perp v) vel
-                    , astAngle = 0
-                    , astSize = size `div` 2
+                    { _aId = (+1) $ maximum $ HM.keys asteroids
+                    , _aPosition = pos
+                    , _aVelocity = vel & vVect %~ (\v -> v - perp v)
+                    , _aAngle = 0
+                    , _aSize = size `div` 2
                     }
             in insertAsteroid part2 $ insertAsteroid part1 asteroids
 
-        insertAsteroid a = HM.insert (astId a) a
+        insertAsteroid a = HM.insert (a ^. aId) a
 
 
 moveAsteroids :: Time -> Asteroids -> Asteroids
 moveAsteroids dT = HM.map (stepAsteroid dT)
     where
         stepAsteroid dT a =
-            a { astPosition = move dT (astPosition a) (astVelocity a) }
+            a & aPosition %~ move dT (a ^. aVelocity)
 
 
 -- returns new position
-move :: Time -> Position -> Velocity -> Position
-move dT position (Velocity v) = kmap (+ fromIntegral dT / 100 *^ v) position
+move :: Time -> Velocity -> Position -> Position
+move dT (Velocity v) = over pVect (+ fromIntegral dT / 100 *^ v)
     -- TODO wrap
