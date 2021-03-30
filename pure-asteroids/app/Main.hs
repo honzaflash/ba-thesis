@@ -31,7 +31,7 @@ main = do
 
     SDL.showWindow window
 
-    gameLoop renderer 0 16 mempty initializeWorld
+    gameLoop renderer 0 16 mempty mempty initializeWorld
         `catch` \(e :: SomeException) -> putStrLn ("whoopsie" ++ show e)
 
     SDL.destroyWindow window
@@ -39,13 +39,3 @@ main = do
 
     putStrLn "Good bye!!"
 
-
-
--- TODO remove
-keyboardEventTesterThingy = do
-    SDL.delay 5000
-    SDL.pollEvents >>= mapM print . keyFilter
-    SDL.delay 5000
-    SDL.pollEvents >>= mapM print . keyFilter
-    where
-        keyFilter events = [ (SDL.keyboardEventKeyMotion e, SDL.unwrapKeycode $ SDL.keysymKeycode $ SDL.keyboardEventKeysym e) | (SDL.KeyboardEvent e) <- map SDL.eventPayload events ]

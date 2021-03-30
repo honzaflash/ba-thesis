@@ -1,33 +1,40 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 module GameLoop
     ( gameLoop 
     ) where
 
+
 import Types
-import EventProcessing
+import Input ( processInput, quitEvent, InputState )
+import EventProcessing ( processWorldEvents )
 import Step ( stepWorld )
 import Draw ( drawWorld )
 
 import qualified SDL
 import Control.Monad ( unless )
 import Text.Printf ( printf )
+import Control.Lens ( (^.) )
 
-gameLoop :: SDL.Renderer -> Time -> Time -> WorldEvents -> World -> IO ()
-gameLoop renderer prevTime deltaTime wEvents w = do
 
-    sdlEvents <- map SDL.eventPayload <$> SDL.pollEvents
 
+-- | Main game loop
+gameLoop :: SDL.Renderer -> Time -> Time -> InputState -> WorldEvents -> World -> IO ()
+gameLoop renderer prevTime deltaTime prevInput wEvents w = do
+
+    newInput <- processInput prevInput <$> SDL.pollEvents
+
+    -- world updating
     let (newWEvents, newW) =
             stepWorld deltaTime $ processWorldEvents wEvents w
     
+    -- world drawing
     drawWorld renderer newW
 
     -- FPS management
     currentTime <- fromIntegral <$> SDL.ticks
     frameTime <- lockFps 16 currentTime
 
-    unless (SDL.QuitEvent `elem` sdlEvents) $
-        gameLoop renderer currentTime frameTime newWEvents newW
+    unless (newInput ^. quitEvent) $
+        gameLoop renderer currentTime frameTime newInput newWEvents newW
     
     where
         lockFps targetTime currentTime = do
