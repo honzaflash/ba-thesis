@@ -23,7 +23,7 @@ data World =
 
 data Ship =
     Ship 
-    { _sPosition :: Position 
+    { _sPosition :: Position
     , _sVelocity :: Velocity
     , _sAngle :: Angle
     , _sLives :: Int
@@ -80,6 +80,8 @@ type Time = Int
 type Score = Int
 
 
+-- TODO  add event type for communicating with the game loop
+-- for playing death animations, displaying game over screen etc.
 data WorldEvents =
     WorldEvents
     { _forAsteroids :: [AsteroidEvent]
@@ -124,9 +126,3 @@ makeLenses ''Position
 makeLenses ''Velocity
 
 
-worldEventsA :: AsteroidEvent -> WorldEvents
-worldEventsA ae = mempty & forAsteroids %~ (ae :)
-
-worldEventsS = undefined
-worldEventsU = undefined
-worldEventsScr = undefined

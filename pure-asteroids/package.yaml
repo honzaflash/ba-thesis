@@ -25,6 +25,7 @@ dependencies:
 - linear
 - unordered-containers
 - lens
+# - parallel # Control.Parallel
 
 library:
   source-dirs: src

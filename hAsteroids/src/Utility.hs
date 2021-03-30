@@ -15,6 +15,7 @@ import qualified SDL
 
 
 {- Global static variables -}
+
 windowWidth, windowHeight :: CInt
 windowWidth = 1024
 windowHeight = 768

@@ -12,12 +12,12 @@ initializeWorld =
     { _wShip = Ship (Position $ V2 10 10) (Velocity $ V2 5 5) (pi / 4 * 3) 3
     , _wAsteroids =
         HM.fromList [(id, Asteroid 
-                            id 
-                            (Position $ V2 200 200) 
+                            id
+                            (Position $ V2 350 $ fromIntegral (id `mod` 500 + 100)) 
                             (Velocity $ V2 (5 * sin (fromIntegral id)) (5 * cos (fromIntegral $ id + 42))) 
-                            0 
+                            0
                             64
-                      ) | id <- [0..999] ]
+                      ) | id <- [0..99] ]
     , _wBullets = HM.empty
     , _wTime = 0
     , _wScore = 0

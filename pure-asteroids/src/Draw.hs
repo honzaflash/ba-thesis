@@ -2,11 +2,13 @@ module Draw where
 
 
 import Types
+import Utility
 
 import qualified SDL
 import qualified Data.HashMap.Strict as HM
 import Linear
 import Control.Lens
+
 
 
 drawWorld :: SDL.Renderer -> World -> IO ()
@@ -21,11 +23,7 @@ drawWorld renderer w = do
 
 
 drawShip :: SDL.Renderer -> Ship -> IO ()
-drawShip renderer s =
-    let sPos = fmap round $ s ^. sPosition . pVect
-        p1 = SDL.P sPos
-        p2 = SDL.P $ sPos + fmap round (10 *^ angle (s ^. sAngle))
-    in SDL.drawLine renderer p1 p2
+drawShip renderer ship = drawShape renderer $ shipPoints ship
 
 
 drawAsteroid :: SDL.Renderer -> Asteroid -> IO ()

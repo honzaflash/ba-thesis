@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main where
@@ -6,6 +7,8 @@ import Initialize
 import GameLoop
 
 import qualified SDL
+import Control.Exception
+
 
 main :: IO ()
 main = do
@@ -29,6 +32,7 @@ main = do
     SDL.showWindow window
 
     gameLoop renderer 0 16 mempty initializeWorld
+        `catch` \(e :: SomeException) -> putStrLn ("whoopsie" ++ show e)
 
     SDL.destroyWindow window
     SDL.quit

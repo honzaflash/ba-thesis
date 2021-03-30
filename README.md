@@ -16,3 +16,6 @@
 
     Currently only part of the world structure 
     is defined, keyboard input is not yet implemented, rendering is WIP but portion of the game logic and architecture is done.
+
+    it now renderes the ship rotating, moving across the space
+    and 100 asteroids rendered as dots flying around colliding with the ship
