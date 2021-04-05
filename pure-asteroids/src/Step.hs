@@ -5,6 +5,7 @@ import Types
 import Input ( InputState )
 import Step.Ship ( stepShip )
 import Step.Asteroids ( stepAsteroids )
+import Step.Ufos ( stepUfos )
 import Step.Bullets
 
 import qualified Data.HashMap.Strict as HM
@@ -17,7 +18,7 @@ stepWorld deltaTime input oldW =
     let
         (eventsS, newShip) = stepShip deltaTime input oldW $ oldW ^. wShip
         (eventsB, newBullets) = stepBullets deltaTime input oldW $ oldW ^. wBullets
-        -- (eventsU, newUfo) = updateUfos TODO
+        (eventsU, newUfo) = stepUfos deltaTime oldW $ oldW ^. wUfos
         (eventsScr, newScore) = (mempty, oldW ^. wScore)
     in
         (,) (eventsS <> eventsB <> eventsScr) $
@@ -25,7 +26,7 @@ stepWorld deltaTime input oldW =
             & wShip      .~ newShip
             & wAsteroids %~ stepAsteroids deltaTime
             & wBullets   .~ newBullets
-            -- & wUfos
+            & wUfos      .~ newUfo
             & wTime      %~ (+ deltaTime)
             & wScore     .~ newScore
 

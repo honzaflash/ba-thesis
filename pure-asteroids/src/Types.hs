@@ -15,7 +15,7 @@ data World =
     { _wShip :: Ship 
     , _wAsteroids :: Asteroids
     , _wBullets :: Bullets
---    , _wUfos :: Ufos
+    , _wUfos :: Ufos
     , _wTime :: Time
     , _wScore :: Score
     }
@@ -67,6 +67,23 @@ data Bullet =
     deriving Show
 
 data BulletShooter = ShotByShip | ShotByUfo deriving (Eq, Show)
+
+
+-- | Ufos state structure
+type Ufos = HM.HashMap Int Ufo
+data Ufo =
+    Ufo
+    { _uId :: Int
+    , _uPosition :: Position
+    , _uVelocity :: Velocity
+    , _uSize :: UfoSize
+    , _uTtl :: Time
+    , _uTimeToShoot :: Time
+    }
+    deriving Show
+
+data UfoSize = LargeSaucer | SmallSaucer
+    deriving Show
 
 
 -- | Common elemental properties
@@ -129,13 +146,13 @@ newtype ScoreEvent =
     deriving Show
 
 
-makeLenses ''WorldEvents
 makeLenses ''World
 makeLenses ''Ship
 makeLenses ''Asteroid
 makeLenses ''Bullet
--- makeLenses ''Ufos
+makeLenses ''Ufo
 makeLenses ''Position
 makeLenses ''Velocity
+makeLenses ''WorldEvents
 
 

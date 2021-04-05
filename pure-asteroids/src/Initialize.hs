@@ -1,10 +1,12 @@
 module Initialize where
 
+
 import Types
 import Utility ( windowHeightF, windowWidthF )
 
 import qualified Data.HashMap.Strict as HM
 import Linear
+
 
 
 initializeWorld :: World
@@ -20,6 +22,8 @@ initializeWorld =
                             initAsteroidSize
                       ) | id <- [0..9] ]
     , _wBullets = HM.empty
+    , _wUfos = HM.empty
     , _wTime = 0
     , _wScore = 0
     }
+
