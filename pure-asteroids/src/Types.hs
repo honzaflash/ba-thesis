@@ -9,6 +9,7 @@ import qualified Data.HashMap.Strict as HM
 import Control.Lens
 
 
+-- | Game world state structure 
 data World =
     World
     { _wShip :: Ship 
@@ -21,6 +22,9 @@ data World =
     deriving Show
 
 
+-- | Ship state structure
+-- TODO  add a flag for when the ship is hit,
+-- explodes and is invincible for a short time after respawn
 data Ship =
     Ship 
     { _sPosition :: Position
@@ -31,6 +35,7 @@ data Ship =
     deriving Show
 
 
+-- | Asterodis state structure
 type Asteroids = HM.HashMap Int Asteroid
 data Asteroid =
     Asteroid
@@ -49,6 +54,7 @@ minAsteroidSize = 16
 initAsteroidSize = 64
 
 
+-- | Bullets state structure
 type Bullets = HM.HashMap Int Bullet
 data Bullet =
     Bullet
@@ -56,32 +62,30 @@ data Bullet =
     , _bPosition :: Position
     , _bVelocity :: Velocity
     , _bShooter :: BulletShooter
-    , _bTtl :: Double
+    , _bTtl :: Int
     }
     deriving Show
 
-data BulletShooter = ShotByShip | ShotByUfo deriving Show
+data BulletShooter = ShotByShip | ShotByUfo deriving (Eq, Show)
 
 
+-- | Common elemental properties
 newtype Position = Position { _pVect :: V2 Double }
     deriving Show
-
 
 newtype Velocity = Velocity  { _vVect :: V2 Double }
     deriving Show
 
-
 type Angle = Double
-
-
+ 
 type Time = Int
-
 
 type Score = Int
 
 
+-- | Structure for event passing between entity groups
 -- TODO  add event type for communicating with the game loop
--- for playing death animations, displaying game over screen etc.
+-- displaying game over screen etc.
 data WorldEvents =
     WorldEvents
     { _forAsteroids :: [AsteroidEvent]
@@ -97,20 +101,29 @@ instance Monoid WorldEvents where
     mempty = WorldEvents [] [] [] []
 
 
+nullEvents :: WorldEvents -> Bool
+nullEvents (WorldEvents [] [] [] []) = True
+nullEvents _                         = False
+
+
+-- * Individual event types
+
+-- | Asteroid event
 newtype AsteroidEvent = 
     BreakE Int
     deriving Show
 
-
+-- | Ship event
 data ShipEvent = 
     HitE | GainLifeE
     deriving Show
 
+-- | Ufos event
 newtype UfosEvent = 
     DestroyE Int
     deriving Show
 
-
+-- | Score event
 newtype ScoreEvent = 
     IncreaseE Int
     deriving Show

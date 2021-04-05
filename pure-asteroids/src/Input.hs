@@ -35,6 +35,10 @@ instance Monoid InputState where
 makeLenses ''InputState
 
 
+-- | helper wrapper
+spaceKeycode :: SDL.Keycode
+spaceKeycode = SDL.KeycodeSpace
+
 -- | Helper for querying InputState on one time presses  
 wasPressed :: InputState -> SDL.Keycode -> Bool
 wasPressed st k = k `elem` st ^. werePressed

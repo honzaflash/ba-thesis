@@ -4,7 +4,7 @@ module GameLoop
 
 
 import Types
-import Input ( processInput, quitEvent, InputState )
+import Input
 import EventProcessing ( processWorldEvents )
 import Step ( stepWorld )
 import Draw ( drawWorld )
@@ -31,7 +31,7 @@ gameLoop renderer prevTime deltaTime prevInput wEvents w = do
 
     -- FPS management
     currentTime <- fromIntegral <$> SDL.ticks
-    frameTime <- lockFps 16 currentTime
+    frameTime <- min 64 <$> lockFps 16 currentTime
 
     unless (newInput ^. quitEvent) $
         gameLoop renderer currentTime frameTime newInput newWEvents newW

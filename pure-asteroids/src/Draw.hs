@@ -1,4 +1,6 @@
-module Draw where
+module Draw
+( drawWorld
+) where
 
 
 import Types
@@ -15,9 +17,11 @@ drawWorld :: SDL.Renderer -> World -> IO ()
 drawWorld renderer w = do
     SDL.rendererDrawColor renderer SDL.$= V4 0 0 0 0
     SDL.clear renderer
+
     SDL.rendererDrawColor renderer SDL.$= V4 255 255 255 255
-    mapM_ (drawAsteroid renderer) $ w ^. wAsteroids
     drawShip renderer $ w ^. wShip
+    mapM_ (drawAsteroid renderer) $ w ^. wAsteroids
+    mapM_ (drawBullet renderer) $ w ^. wBullets
 
     SDL.present renderer
 
@@ -35,3 +39,9 @@ drawAsteroid renderer a =
         asteroidVertex i = V2 ((*) sizeF . cos $ pi * 2 / 7 * i)
                                 ((*) sizeF . sin $ pi * 2 / 7 * i)
         sizeF = fromIntegral $ a ^. aSize
+
+
+drawBullet :: SDL.Renderer -> Bullet -> IO ()
+drawBullet renderer b =
+    SDL.drawPoint renderer $ SDL.P $ fmap round $ b ^. bPosition . pVect
+

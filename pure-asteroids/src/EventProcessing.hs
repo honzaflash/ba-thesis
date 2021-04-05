@@ -13,12 +13,14 @@ import Data.Foldable (fold)
 
 
 
+-- | Process all WorldEvent and filter dead bullets
 processWorldEvents :: WorldEvents -> World -> World
 processWorldEvents events world =
     world
         & wAsteroids %~ processAsteroidsEvents (events ^. forAsteroids)
         & wShip      %~ processShipEvents      (events ^. forShip)
         -- & wUfos      %~ processUfosEvents      (events ^. forUfos)
+        & wBullets   %~ filterDeadBullets
         & wScore     %~ processScoreEvents     (events ^. forScore)
 
 
@@ -67,4 +69,9 @@ processShipEvents =
 
 processScoreEvents :: [ScoreEvent] -> Score -> Score
 processScoreEvents = const id
+
+
+-- | Filter out bullets that have no more Time To Live left
+filterDeadBullets :: Bullets -> Bullets
+filterDeadBullets = HM.filter (\b -> b ^. bTtl > 0)
 
