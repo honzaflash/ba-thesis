@@ -45,8 +45,8 @@ data Asteroid =
 type AsteroidSize = Int
 
 minAsteroidSize, initAsteroidSize :: Int 
-minAsteroidSize = 32
-initAsteroidSize = 128
+minAsteroidSize = 16
+initAsteroidSize = 64
 
 
 type Bullets = HM.HashMap Int Bullet

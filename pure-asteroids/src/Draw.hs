@@ -28,4 +28,10 @@ drawShip renderer ship = drawShape renderer $ shipPoints ship
 
 drawAsteroid :: SDL.Renderer -> Asteroid -> IO ()
 drawAsteroid renderer a =
-    SDL.drawPoint renderer $ SDL.P $ fmap round $ a ^. aPosition . pVect
+    drawShape renderer asteroidShape
+    where
+        asteroidShape =
+            map ((+ a ^. aPosition . pVect) . asteroidVertex) [1..7]
+        asteroidVertex i = V2 ((*) sizeF . cos $ pi * 2 / 7 * i)
+                                ((*) sizeF . sin $ pi * 2 / 7 * i)
+        sizeF = fromIntegral $ a ^. aSize

@@ -17,8 +17,8 @@ initializeWorld =
                             (Position $ V2 350 $ fromIntegral (id `mod` 500 + 100)) 
                             (Velocity $ V2 (5 * sin (fromIntegral id)) (5 * cos (fromIntegral $ id + 42))) 
                             0
-                            64
-                      ) | id <- [0..99] ]
+                            initAsteroidSize
+                      ) | id <- [0..9] ]
     , _wBullets = HM.empty
     , _wTime = 0
     , _wScore = 0
