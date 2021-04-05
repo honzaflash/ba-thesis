@@ -24,7 +24,7 @@ gameLoop renderer prevTime deltaTime prevInput wEvents w = do
 
     -- world updating
     let (newWEvents, newW) =
-            stepWorld deltaTime $ processWorldEvents wEvents w
+            stepWorld deltaTime newInput $ processWorldEvents wEvents w
     
     -- world drawing
     drawWorld renderer newW

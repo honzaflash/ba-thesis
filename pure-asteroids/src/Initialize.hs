@@ -1,6 +1,7 @@
 module Initialize where
 
 import Types
+import Utility ( windowHeightF, windowWidthF )
 
 import qualified Data.HashMap.Strict as HM
 import Linear
@@ -9,7 +10,7 @@ import Linear
 initializeWorld :: World
 initializeWorld =
     World
-    { _wShip = Ship (Position $ V2 10 10) (Velocity $ V2 5 5) (pi / 4 * 3) 3
+    { _wShip = Ship (Position $ V2 (windowHeightF/2) (windowWidthF/2)) (Velocity $ V2 0 0) (pi / 4 * 3) 3
     , _wAsteroids =
         HM.fromList [(id, Asteroid 
                             id
