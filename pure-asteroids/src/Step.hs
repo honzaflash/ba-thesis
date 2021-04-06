@@ -27,7 +27,7 @@ stepWorld deltaTime input oldW =
             & wAsteroids %~ stepAsteroids deltaTime
             & wBullets   .~ newBullets
             & wUfos      .~ newUfo
-            & wTime      %~ (+ deltaTime)
+            & wTime      +~ deltaTime
             & wScore     .~ newScore
 
 

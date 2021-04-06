@@ -36,8 +36,9 @@ makeLenses ''InputState
 
 
 -- | helper wrapper
-spaceKeycode :: SDL.Keycode
+spaceKeycode, escapeKeycode :: SDL.Keycode
 spaceKeycode = SDL.KeycodeSpace
+escapeKeycode = SDL.KeycodeEscape
 
 -- | Helper for querying InputState on one time presses  
 wasPressed :: InputState -> SDL.Keycode -> Bool

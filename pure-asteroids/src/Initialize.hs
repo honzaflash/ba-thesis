@@ -12,7 +12,7 @@ import Linear
 initializeWorld :: World
 initializeWorld =
     World
-    { _wShip = Ship (Position $ V2 (windowHeightF/2) (windowWidthF/2)) (Velocity $ V2 0 0) (pi / 4 * 3) 3
+    { _wShip = Ship (Position $ V2 (windowHeightF/2) (windowWidthF/2)) (Velocity $ V2 0 0) (pi / 4 * 3) 3 ShipAlive
     , _wAsteroids =
         HM.fromList [(id, Asteroid 
                             id

@@ -31,7 +31,7 @@ main = do
 
     SDL.showWindow window
 
-    gameLoop renderer 0 16 mempty mempty initializeWorld
+    gameLoop renderer 0 16 Playing mempty mempty initializeWorld
         `catch` \(e :: SomeException) -> putStrLn ("whoopsie" ++ show e)
 
     SDL.destroyWindow window

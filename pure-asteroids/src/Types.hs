@@ -1,23 +1,22 @@
 {-# LANGUAGE TemplateHaskell #-}
--- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Types where
 
 
-import Linear
+import Linear ( V2 )
 -- is .Lazy better? Maybe benchmark this
 import qualified Data.HashMap.Strict as HM
-import Control.Lens
+import Control.Lens ( makeLenses )
 
 
 -- | Game world state structure 
 data World =
     World
-    { _wShip :: Ship 
+    { _wShip      :: Ship 
     , _wAsteroids :: Asteroids
-    , _wBullets :: Bullets
-    , _wUfos :: Ufos
-    , _wTime :: Time
-    , _wScore :: Score
+    , _wBullets   :: Bullets
+    , _wUfos      :: Ufos
+    , _wTime      :: Time
+    , _wScore     :: Score
     }
     deriving Show
 
@@ -29,9 +28,16 @@ data Ship =
     Ship 
     { _sPosition :: Position
     , _sVelocity :: Velocity
-    , _sAngle :: Angle
-    , _sLives :: Int
+    , _sAngle    :: Angle
+    , _sLives    :: Int
+    , _sState    :: ShipState
     }
+    deriving Show
+
+data ShipState
+    = ShipAlive
+    | ShipExploding Time
+    | ShipRespawning Time
     deriving Show
 
 
@@ -39,11 +45,11 @@ data Ship =
 type Asteroids = HM.HashMap Int Asteroid
 data Asteroid =
     Asteroid
-    { _aId :: Int
+    { _aId       :: Int
     , _aPosition :: Position 
     , _aVelocity :: Velocity
-    , _aAngle :: Angle
-    , _aSize :: AsteroidSize
+    , _aAngle    :: Angle
+    , _aSize     :: AsteroidSize
     }
     deriving Show
 
@@ -58,11 +64,11 @@ initAsteroidSize = 64
 type Bullets = HM.HashMap Int Bullet
 data Bullet =
     Bullet
-    { _bId :: Int
+    { _bId       :: Int
     , _bPosition :: Position
     , _bVelocity :: Velocity
-    , _bShooter :: BulletShooter
-    , _bTtl :: Int
+    , _bShooter  :: BulletShooter
+    , _bTtl      :: Int
     }
     deriving Show
 
@@ -73,12 +79,12 @@ data BulletShooter = ShotByShip | ShotByUfo deriving (Eq, Show)
 type Ufos = HM.HashMap Int Ufo
 data Ufo =
     Ufo
-    { _uId :: Int
-    , _uPosition :: Position
-    , _uVelocity :: Velocity
-    , _uSize :: UfoSize
-    , _uTtl :: Time
-    , _uTimeToShoot :: Time
+    { _uId          :: Int
+    , _uPosition    :: Position
+    , _uVelocity    :: Velocity
+    , _uSize        :: UfoSize
+    , _uTtl         :: Time -- reaches 0 <--> reaches the end of the screen, and is destroyed
+    , _uTimeToShoot :: Time -- when it reaches 0 ufo will shoot
     }
     deriving Show
 
@@ -101,14 +107,12 @@ type Score = Int
 
 
 -- | Structure for event passing between entity groups
--- TODO  add event type for communicating with the game loop
--- displaying game over screen etc.
 data WorldEvents =
     WorldEvents
     { _forAsteroids :: [AsteroidEvent]
-    , _forShip :: [ShipEvent]
-    , _forUfos :: [UfosEvent]
-    , _forScore :: [ScoreEvent]
+    , _forShip      :: [ShipEvent]
+    , _forUfos      :: [UfosEvent]
+    , _forScore     :: [ScoreEvent]
     }
     deriving Show
 instance Semigroup WorldEvents where
@@ -116,7 +120,6 @@ instance Semigroup WorldEvents where
         WorldEvents (ae1 <> ae2) (se1 <> se2) (ue1 <> ue2) (scre1 <> scre2)
 instance Monoid WorldEvents where
     mempty = WorldEvents [] [] [] []
-
 
 nullEvents :: WorldEvents -> Bool
 nullEvents (WorldEvents [] [] [] []) = True
