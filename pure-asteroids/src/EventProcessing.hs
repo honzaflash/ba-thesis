@@ -13,14 +13,13 @@ import Data.Foldable (fold)
 
 
 
--- | Process all WorldEvent and filter dead bullets
+-- | Process all WorldEvent
 processWorldEvents :: WorldEvents -> World -> World
 processWorldEvents events world =
     world
         & wAsteroids %~ processAsteroidsEvents (events ^. forAsteroids)
         & wShip      %~ processShipEvents      (events ^. forShip)
         -- & wUfos      %~ processUfosEvents      (events ^. forUfos)
-        & wBullets   %~ filterDeadBullets
         & wScore     %~ processScoreEvents     (events ^. forScore)
 
 
@@ -58,9 +57,8 @@ processShipEvents =
     flip $ foldl processShipEvent
 
     where
-        -- TODO gameover if lives go to 0 <- this may be job for stepWorld
-        processShipEvent ship HitE      = ship & sLives %~ subtract 1
-        processShipEvent ship GainLifeE = ship & sLives %~ (+1)
+        processShipEvent ship HitE      = ship & sLives -~ 1
+        processShipEvent ship GainLifeE = ship & sLives +~ 1
 
 
 -- processUfosEvents :: [UfosEvent] -> Ufos -> Ufos
@@ -69,9 +67,4 @@ processShipEvents =
 
 processScoreEvents :: [ScoreEvent] -> Score -> Score
 processScoreEvents = const id
-
-
--- | Filter out bullets that have no more Time To Live left
-filterDeadBullets :: Bullets -> Bullets
-filterDeadBullets = HM.filter (\b -> b ^. bTtl > 0)
 

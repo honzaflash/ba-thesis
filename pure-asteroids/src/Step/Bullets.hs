@@ -22,7 +22,7 @@ initBulletTtl = 1400
 -- | Step function for the entire Bullets collection
 stepBullets :: Time -> InputState -> World -> Bullets -> (WorldEvents, Bullets)
 stepBullets dT input w =
-    fmap (shoot input w) . traverse (stepBullet dT w)
+    fmap (shoot input w) . traverse (stepBullet dT w) . filterDeadBullets
 
 
 -- | Step function for an individual Bullet
@@ -92,4 +92,9 @@ shoot input w =
             Bullet newId newBulletPosition newBulletVelocity ShotByShip initBulletTtl
         newBulletPosition = w ^. wShip . sPosition
         newBulletVelocity = Velocity $ bulletSpeed *^ angle (w ^. wShip . sAngle)
+
+
+-- | Filter out bullets that have no more Time To Live left
+filterDeadBullets :: Bullets -> Bullets
+filterDeadBullets = HM.filter (\b -> b ^. bTtl > 0)
 

@@ -1,5 +1,8 @@
 module Draw
 ( drawWorld
+, drawMainMenu
+, drawPauseMenu
+, drawGameOver
 ) where
 
 
@@ -44,4 +47,16 @@ drawAsteroid renderer a =
 drawBullet :: SDL.Renderer -> Bullet -> IO ()
 drawBullet renderer b =
     SDL.drawPoint renderer $ SDL.P $ fmap round $ b ^. bPosition . pVect
+
+
+drawMainMenu :: SDL.Renderer -> IO ()
+drawMainMenu _ = putStrLn "press SPACE to start a new game\npress ESCAPE to quit the game"
+
+
+drawPauseMenu :: SDL.Renderer -> IO ()
+drawPauseMenu _ = putStrLn "press SPACE to unpause\npress ESCAPE to exit to main menu"
+
+
+drawGameOver :: SDL.Renderer -> IO ()
+drawGameOver _ = putStrLn "GAME OVER\npress SPACE to continue to main menu"
 

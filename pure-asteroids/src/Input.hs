@@ -40,6 +40,7 @@ spaceKeycode, escapeKeycode :: SDL.Keycode
 spaceKeycode = SDL.KeycodeSpace
 escapeKeycode = SDL.KeycodeEscape
 
+
 -- | Helper for querying InputState on one time presses  
 wasPressed :: InputState -> SDL.Keycode -> Bool
 wasPressed st k = k `elem` st ^. werePressed
@@ -50,7 +51,7 @@ processInput :: InputState -> [SDL.Event] -> InputState
 processInput state = processNewInput resetState
     where resetState = state
                          & werePressed .~ []
-                         & quitEvent .~ False
+                         & quitEvent   .~ False
 
 
 -- here the actual updating of InputState is done

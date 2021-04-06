@@ -1,13 +1,14 @@
 module GameLoop
-    ( gameLoop 
-    ) where
+( gameLoop
+, LoopState (..)
+) where
 
 
 import Types
 import Input
 import EventProcessing ( processWorldEvents )
 import Step ( stepWorld )
-import Draw ( drawWorld )
+import Draw
 
 import qualified SDL
 import Control.Monad ( unless )
@@ -23,11 +24,6 @@ data LoopState
     | MainMenu
     | QuitGame
     deriving Show
--- instance Semigroup LoopState where -- TODO
---     Playing  <> other    = other
---     other    <> Playing  = other
---     GameOver <> _        = GameOver
---     -- _        <> GameOver = GameOver
 
 
 -- | Main game loop
@@ -40,17 +36,23 @@ gameLoop
     -> WorldEvents
     -> World
     -> IO ()
-gameLoop renderer prevTime deltaTime loopState prevInput wEvents w = do
+gameLoop renderer prevTime deltaTime loopState prevInput wEvents oldW = do
 
     newInput <- processInput prevInput <$> SDL.pollEvents
 
-    -- world updating
-    let (newWEvents, newW) =
-            stepWorld deltaTime newInput $ processWorldEvents wEvents w
+    -- World updating
+    let (newWEvents, newW) = stepWorlIfPlaying newInput loopState
     
-    -- world drawing
-    drawWorld renderer newW
+    -- World drawing
+    case loopState of
+        Playing   -> drawWorld renderer newW
+        PauseMenu -> drawWorld renderer newW >> drawPauseMenu renderer
+        GameOver  -> drawWorld renderer newW >> drawGameOver renderer
+        MainMenu  -> drawMainMenu renderer
+        QuitGame  -> pure ()
 
+
+    -- State transitions
     let newLoopState = nextLoopState newInput newW
 
     -- FPS management
@@ -58,14 +60,19 @@ gameLoop renderer prevTime deltaTime loopState prevInput wEvents w = do
     frameTime <- min 64 <$> lockFps 16 currentTime
 
     -- Next frame
-    unless (newInput ^. quitEvent) $
+    unless (newInput ^. quitEvent || isQuitGame loopState) $
         gameLoop renderer currentTime frameTime newLoopState newInput newWEvents newW
     
     where
+        stepWorlIfPlaying newInput Playing =
+            stepWorld deltaTime newInput $
+                processWorldEvents wEvents oldW
+        stepWorlIfPlaying newInput _       = (mempty, oldW)
+
         nextLoopState input newW =
             case loopState of
                 Playing
-                    | newW ^. wShip . sState == ShipRespawning &&
+                    | isRespawning (newW ^. wShip . sState) &&
                         newW ^. wShip . sLives == 0  -> GameOver
                     | wasPressed input escapeKeycode -> PauseMenu
                     | otherwise                      -> loopState
@@ -80,6 +87,8 @@ gameLoop renderer prevTime deltaTime loopState prevInput wEvents w = do
                     | wasPressed input spaceKeycode  -> PauseMenu
                     | wasPressed input escapeKeycode -> QuitGame
                     | otherwise                      -> loopState
+        isRespawning (ShipRespawning _) = True
+        isRespawning  _                 = False
 
         lockFps targetTime currentTime = do
             let elapsedTime = currentTime - prevTime
@@ -88,4 +97,6 @@ gameLoop renderer prevTime deltaTime loopState prevInput wEvents w = do
             -- putStr $ printf "%d/%d " elapsedTime delay -- show ticks
             pure $ elapsedTime + delay
 
+        isQuitGame QuitGame = True
+        isQuitGame _        = False
 
