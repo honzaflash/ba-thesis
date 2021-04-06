@@ -55,6 +55,19 @@ stepExplodingShip dT ship = (,) mempty $
     ship
       & sAngle +~ 0.01 * fromIntegral dT -- just spin
       & sState %~ stepShipState dT
+      & resetIfTransitioningState
+
+    where
+        resetIfTransitioningState ship =
+            case ship ^. sState of
+                ShipExploding t
+                    | t < 0 -> resetShip ship
+                _           -> ship
+        resetShip ship =
+            ship
+              & sPosition . pVect .~ V2 (windowWidthF / 2) (windowHeightF / 2)
+              & sVelocity . vVect .~ V2 0 0
+              & sAngle            .~ 0
 
 
 -- | step function for ship in the respawning state
@@ -94,7 +107,7 @@ steering dT input = (if input ^. isHeldA then (-steeringStrength) else 0)
 stepShipState :: Time -> ShipState -> ShipState
 stepShipState dT (ShipExploding t)
                     | t > 0     = ShipExploding $ t - dT
-                    | otherwise = ShipRespawning 700
+                    | otherwise = ShipRespawning 1000
 stepShipState dT (ShipRespawning t)
                     | t > 0     = ShipRespawning $ t - dT
                     | otherwise = ShipAlive
