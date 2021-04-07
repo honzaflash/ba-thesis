@@ -4,9 +4,11 @@
 module Main where
 
 import Initialize
+import Resources
 import GameLoop
 
 import qualified SDL
+import qualified SDL.Font as FNT
 import Control.Exception
 
 
@@ -15,6 +17,7 @@ main = do
     putStrLn "...starting"
 
     SDL.initialize [SDL.InitVideo]
+    FNT.initialize
     
     window <-
         SDL.createWindow "hAsteroids"
@@ -31,10 +34,14 @@ main = do
 
     SDL.showWindow window
 
-    gameLoop renderer 0 16 Playing mempty mempty initializeWorld
-        `catch` \(e :: SomeException) -> putStrLn ("whoopsie" ++ show e)
+    texts <- loadTexts renderer
 
+    gameLoop renderer texts 0 16 Playing mempty mempty initializeWorld
+        `catch` \(e :: SomeException) -> putStrLn ("Whoopsie: " ++ show e)
+
+    -- TODO  destroy textures
     SDL.destroyWindow window
+    FNT.quit
     SDL.quit
 
     putStrLn "Good bye!!"

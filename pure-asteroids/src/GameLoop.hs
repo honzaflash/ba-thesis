@@ -6,6 +6,7 @@ module GameLoop
 
 import Types
 import Input
+import Resources
 import EventProcessing ( processWorldEvents )
 import Step ( stepWorld )
 import Draw
@@ -17,18 +18,10 @@ import Control.Lens ( (^.) )
 
 
 
-data LoopState
-    = Playing
-    | GameOver
-    | PauseMenu
-    | MainMenu
-    | QuitGame
-    deriving Show
-
-
 -- | Main game loop
 gameLoop
     :: SDL.Renderer
+    -> Texts
     -> Time
     -> Time
     -> LoopState
@@ -36,21 +29,15 @@ gameLoop
     -> WorldEvents
     -> World
     -> IO ()
-gameLoop renderer prevTime deltaTime loopState prevInput wEvents oldW = do
+gameLoop r texts prevTime deltaTime loopState prevInput wEvents oldW = do
 
     newInput <- processInput prevInput <$> SDL.pollEvents
 
     -- World updating
-    let (newWEvents, newW) = stepWorlIfPlaying newInput loopState
+    let (newWEvents, newW) = updateWorlIfPlaying newInput loopState
     
     -- World drawing
-    case loopState of
-        Playing   -> drawWorld renderer newW
-        PauseMenu -> drawWorld renderer newW >> drawPauseMenu renderer
-        GameOver  -> drawWorld renderer newW >> drawGameOver renderer
-        MainMenu  -> drawMainMenu renderer
-        QuitGame  -> pure ()
-
+    drawScene r texts loopState newW 
 
     -- State transitions
     let newLoopState = nextLoopState newInput newW
@@ -61,14 +48,16 @@ gameLoop renderer prevTime deltaTime loopState prevInput wEvents oldW = do
 
     -- Next frame
     unless (newInput ^. quitEvent || isQuitGame loopState) $
-        gameLoop renderer currentTime frameTime newLoopState newInput newWEvents newW
+        gameLoop r texts currentTime frameTime newLoopState newInput newWEvents newW
     
     where
-        stepWorlIfPlaying newInput Playing =
+        -- update world only if loop is in 'Playing' state 
+        updateWorlIfPlaying newInput Playing =
             stepWorld deltaTime newInput $
                 processWorldEvents wEvents oldW
-        stepWorlIfPlaying newInput _       = (mempty, oldW)
+        updateWorlIfPlaying newInput _       = (mempty, oldW)
 
+        -- State transition function
         nextLoopState input newW =
             case loopState of
                 Playing
@@ -90,6 +79,7 @@ gameLoop renderer prevTime deltaTime loopState prevInput wEvents oldW = do
         isRespawning (ShipRespawning _) = True
         isRespawning  _                 = False
 
+        -- locking fps
         lockFps targetTime currentTime = do
             let elapsedTime = currentTime - prevTime
             let delay = max 0 $ targetTime - elapsedTime

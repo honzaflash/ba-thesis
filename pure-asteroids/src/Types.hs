@@ -92,6 +92,10 @@ data UfoSize = LargeSaucer | SmallSaucer
     deriving Show
 
 
+newtype Score = Score { _sValue :: Int }
+    deriving Show
+
+
 -- | Common elemental properties
 newtype Position = Position { _pVect :: V2 Double }
     deriving Show
@@ -103,7 +107,6 @@ type Angle = Double
  
 type Time = Int
 
-type Score = Int
 
 
 -- | Structure for event passing between entity groups
@@ -149,6 +152,17 @@ newtype ScoreEvent =
     deriving Show
 
 
+-- | main game loop state
+data LoopState
+    = Playing
+    | GameOver
+    | PauseMenu
+    | MainMenu
+    | QuitGame
+    deriving Show
+
+
+-- | Make all the lenses
 makeLenses ''World
 makeLenses ''Ship
 makeLenses ''Asteroid
@@ -156,6 +170,7 @@ makeLenses ''Bullet
 makeLenses ''Ufo
 makeLenses ''Position
 makeLenses ''Velocity
+makeLenses ''Score
 makeLenses ''WorldEvents
 
 

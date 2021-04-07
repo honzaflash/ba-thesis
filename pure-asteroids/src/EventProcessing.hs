@@ -26,7 +26,6 @@ processWorldEvents events world =
 processAsteroidsEvents :: [AsteroidEvent] -> Asteroids -> Asteroids
 processAsteroidsEvents =
     flip $ foldl resolveBreakEvent
-
     where
         resolveBreakEvent asteroids (BreakE id) =
             case asteroids !? id of
@@ -55,7 +54,6 @@ processAsteroidsEvents =
 processShipEvents :: [ShipEvent] -> Ship -> Ship
 processShipEvents =
     flip $ foldl processShipEvent
-
     where
         processShipEvent ship HitE      = ship & sLives -~ 1
         processShipEvent ship GainLifeE = ship & sLives +~ 1
@@ -66,5 +64,8 @@ processShipEvents =
 
 
 processScoreEvents :: [ScoreEvent] -> Score -> Score
-processScoreEvents = const id
+processScoreEvents =
+    flip $ foldr processScoreEvent
+    where
+        processScoreEvent (IncreaseE x) = sValue +~ x
 

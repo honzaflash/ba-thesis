@@ -24,6 +24,6 @@ initializeWorld =
     , _wBullets = HM.empty
     , _wUfos = HM.empty
     , _wTime = 0
-    , _wScore = 0
+    , _wScore = Score 0
     }
 
