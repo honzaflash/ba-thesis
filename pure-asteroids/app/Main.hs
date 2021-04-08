@@ -36,7 +36,7 @@ main = do
 
     texts <- loadTexts renderer
 
-    gameLoop renderer texts 0 16 Playing mempty mempty initializeWorld
+    gameLoop renderer texts 0 16 MainMenu mempty mempty initializeWorld
         `catch` \(e :: SomeException) -> putStrLn ("Whoopsie: " ++ show e)
 
     -- TODO  destroy textures

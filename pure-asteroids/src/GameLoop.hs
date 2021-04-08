@@ -9,6 +9,7 @@ import Input
 import Resources
 import EventProcessing ( processWorldEvents )
 import Step ( stepWorld )
+import Initialize ( initializeWorld )
 import Draw
 
 import qualified SDL
@@ -33,6 +34,7 @@ gameLoop r texts prevTime deltaTime loopState prevInput wEvents oldW = do
 
     newInput <- processInput prevInput <$> SDL.pollEvents
 
+    
     -- World updating
     let (newWEvents, newW) = updateWorlIfPlaying newInput loopState
     
@@ -41,6 +43,7 @@ gameLoop r texts prevTime deltaTime loopState prevInput wEvents oldW = do
 
     -- State transitions
     let newLoopState = nextLoopState newInput newW
+    let newW' = resetIfNewGame newLoopState newW
 
     -- FPS management
     currentTime <- fromIntegral <$> SDL.ticks
@@ -48,7 +51,7 @@ gameLoop r texts prevTime deltaTime loopState prevInput wEvents oldW = do
 
     -- Next frame
     unless (newInput ^. quitEvent || isQuitGame loopState) $
-        gameLoop r texts currentTime frameTime newLoopState newInput newWEvents newW
+        gameLoop r texts currentTime frameTime newLoopState newInput newWEvents newW'
     
     where
         -- update world only if loop is in 'Playing' state 
@@ -73,11 +76,17 @@ gameLoop r texts prevTime deltaTime loopState prevInput wEvents oldW = do
                     | wasPressed input spaceKeycode  -> MainMenu
                     | otherwise                      -> loopState
                 MainMenu
-                    | wasPressed input spaceKeycode  -> PauseMenu
+                    | wasPressed input spaceKeycode  -> Playing
                     | wasPressed input escapeKeycode -> QuitGame
                     | otherwise                      -> loopState
         isRespawning (ShipRespawning _) = True
         isRespawning  _                 = False
+
+        -- if transitioning from main menu to playing reinitialize the world
+        resetIfNewGame newLoopState =
+            case (loopState, newLoopState) of
+                (MainMenu, Playing) -> const initializeWorld
+                _                   -> id
 
         -- locking fps
         lockFps targetTime currentTime = do

@@ -10,6 +10,7 @@ import Utility
 import qualified SDL
 import qualified Data.HashMap.Strict as HM
 import Foreign.C.Types ( CInt )
+import Data.Foldable ( fold )
 import Linear
 import Control.Lens
 
@@ -21,21 +22,22 @@ drawScene renderer texts loopState w = do
     SDL.clear renderer
 
     case loopState of
-        Playing   -> drawWorld renderer w
-        PauseMenu -> drawWorld renderer w >> drawPauseMenu renderer texts
-        GameOver  -> drawWorld renderer w >> drawGameOver renderer texts
+        Playing   -> drawWorld renderer texts w
+        PauseMenu -> drawWorld renderer texts w >> drawPauseMenu renderer texts
+        GameOver  -> drawWorld renderer texts w >> drawGameOver renderer texts
         MainMenu  -> drawMainMenu renderer texts
         QuitGame  -> pure ()
     
     SDL.present renderer
 
 
-drawWorld :: SDL.Renderer -> World -> IO ()
-drawWorld renderer w = do
+drawWorld :: SDL.Renderer -> Texts -> World -> IO ()
+drawWorld renderer texts w = do
     SDL.rendererDrawColor renderer SDL.$= V4 255 255 255 255
     drawShip renderer $ w ^. wShip
     mapM_ (drawAsteroid renderer) $ w ^. wAsteroids
     mapM_ (drawBullet renderer) $ w ^. wBullets
+    drawScore renderer texts $ w ^. wScore
 
 
 drawShip :: SDL.Renderer -> Ship -> IO ()
@@ -58,26 +60,63 @@ drawBullet renderer b =
     SDL.drawPoint renderer $ SDL.P $ fmap round $ b ^. bPosition . pVect
 
 
+drawScore :: SDL.Renderer -> Texts -> Score -> IO ()
+drawScore renderer texts = drawNumber renderer texts (V2 20 20) . _sValue
+
+
 drawMainMenu :: SDL.Renderer -> Texts -> IO ()
 drawMainMenu renderer texts =
-    drawCenteredText renderer 300 $ texts HM.! TextMainMenu
+    drawCenteredTexts renderer texts
+        [ TextMainMenu
+        , TextPressSpaceToStartNewGame
+        , TextPressEscapeToQuit
+        ]
 
 
 drawPauseMenu :: SDL.Renderer -> Texts -> IO ()
 drawPauseMenu renderer texts =
-    drawCenteredText renderer 300 $ texts HM.! TextPaused
+    drawCenteredTexts renderer texts
+        [ TextPaused
+        , TextPressSpaceToUnpause
+        , TextPressEscapeToExitToMainMenu
+        ]
 
 
 drawGameOver :: SDL.Renderer -> Texts -> IO ()
 drawGameOver renderer texts =
-    drawCenteredText renderer 300 $ texts HM.! TextGameOver
+    drawCenteredTexts renderer texts
+        [TextGameOver
+        , TextPressSpaceToContinue
+        ]
 
 
-drawCenteredText :: SDL.Renderer -> CInt -> SDL.Texture -> IO ()
-drawCenteredText renderer height text = do
+drawNumber ::
+    ( Show a, Num a )
+    => SDL.Renderer
+    -> Texts
+    -> V2 CInt
+    -> a
+    -> IO ()
+drawNumber renderer texts pos = fold .
+    zipWith (drawText renderer texts)
+        [pos + V2 (0 + i * 16) 0 | i <- [0..]] . numToTextKeys
+
+
+drawCenteredTexts :: SDL.Renderer -> Texts -> [TextKey] -> IO ()
+drawCenteredTexts renderer texts = fold .
+    zipWith (drawCenteredText renderer texts) [100 * i | i <- [3..]]
+
+
+drawCenteredText :: SDL.Renderer -> Texts -> CInt -> TextKey -> IO ()
+drawCenteredText renderer texts yPos key = do
+    textW <- SDL.textureWidth <$> SDL.queryTexture (texts HM.! key)
+    drawText renderer texts (V2 ((windowWidth - textW) `div` 2 ) yPos) key
+
+
+drawText :: SDL.Renderer -> Texts -> V2 CInt -> TextKey -> IO ()
+drawText renderer texts pos key = do
+    let text = texts HM.! key
     (SDL.TextureInfo _ _ textW textH) <- SDL.queryTexture text
     SDL.copy renderer text Nothing $ Just $
-        SDL.Rectangle (SDL.P $ V2 ( (windowWidth - textW) `div` 2 )
-                                  height
-                      ) (V2 textW textH)
+        SDL.Rectangle (SDL.P pos) (V2 textW textH)
 
