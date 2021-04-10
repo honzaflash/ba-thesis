@@ -1,6 +1,6 @@
 name:                pure-asteroids
 version:             0.1.0.0
-github:              "githubuser/pure-asteroids"
+github:              "honzaflash/ba-thesis/pure-asteroids"
 license:             BSD3
 author:              "Author name here"
 maintainer:          "example@example.com"
@@ -21,12 +21,13 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
-- sdl2
+- sdl2 >= 2.5
 - sdl2-ttf
 - linear
 - unordered-containers
 - hashable
 - lens
+- random >= 1.2
 # - parallel # Control.Parallel
 
 library:
@@ -36,10 +37,10 @@ executables:
   pure-asteroids-exe:
     main:                Main.hs
     source-dirs:         app
-    ghc-options: []
-    # - -threaded
-    # - -rtsopts
-    # - -with-rtsopts=-N
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
     dependencies:
     - pure-asteroids
 

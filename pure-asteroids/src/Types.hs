@@ -50,7 +50,6 @@ data Asteroid =
     { _aId       :: Int
     , _aPosition :: Position 
     , _aVelocity :: Velocity
-    , _aAngle    :: Angle
     , _aSize     :: AsteroidSize
     }
     deriving Show

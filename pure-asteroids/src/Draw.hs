@@ -80,6 +80,17 @@ drawBullet renderer =
     SDL.drawPoint renderer . SDL.P . fmap round . view (bPosition . pVect)
 
 
+-- | Helper function for drawing closed shapes
+drawShape :: RealFrac a => SDL.Renderer -> [V2 a] -> IO ()
+drawShape r = (\pts -> drawLines pts $ head pts) . map (SDL.P . fmap round)
+    -- is this slower than SDL.drawLines??
+    where
+        drawLines [  ]       _      = pure ()
+        drawLines [pt]       termPt = SDL.drawLine r pt termPt
+        drawLines (p1 : p2 : pts) termPt =
+            SDL.drawLine r p1 p2 >> drawLines (p2 : pts) termPt
+
+
 drawScore :: SDL.Renderer -> Texts -> Score -> IO ()
 drawScore renderer texts =
     drawNumber renderer texts (V2 (windowWidth `div` 2) 20) . _sValue

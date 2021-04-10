@@ -7,7 +7,7 @@ import Step.Ship ( stepShip )
 import Step.Asteroids ( stepAsteroids )
 import Step.Ufos ( stepUfos )
 import Step.Bullets ( stepBullets )
-import Initialize ( safeRandomAsteroidSpawn )
+import Initialize ( safeRandomAsteroidsSpawn )
 
 import qualified Data.HashMap.Strict as HM
 import Control.Lens
@@ -42,7 +42,10 @@ stepWorld deltaTime input oldW =
                 w ^. wWavePause >= 2000 =
                           w
                            & wWavePause .~ 0
-                           & wAsteroids .~ safeRandomAsteroidSpawn (w ^. wWaveNum + 4)
+                           & wAsteroids .~ safeRandomAsteroidsSpawn
+                                               (oldW ^. wWaveTime)
+                                               (w ^. wShip)
+                                               (w ^. wWaveNum + 4)
                            & wWaveNum +~ 1
             | otherwise = w
 
