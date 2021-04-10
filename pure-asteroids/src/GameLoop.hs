@@ -11,6 +11,7 @@ import EventProcessing ( processWorldEvents )
 import Step ( stepWorld )
 import Initialize ( initializeWorld )
 import Draw
+import Utility
 
 import qualified SDL
 import Control.Monad ( unless )
@@ -23,6 +24,7 @@ import Control.Lens ( (^.) )
 gameLoop
     :: SDL.Renderer
     -> Texts
+    -> RandomStream Double
     -> Time
     -> Time
     -> LoopState
@@ -30,7 +32,7 @@ gameLoop
     -> WorldEvents
     -> World
     -> IO ()
-gameLoop r texts prevTime deltaTime loopState prevInput wEvents oldW = do
+gameLoop r texts rand prevTime deltaTime loopState prevInput wEvents oldW = do
 
     newInput <- processInput prevInput <$> SDL.pollEvents
 
@@ -51,12 +53,12 @@ gameLoop r texts prevTime deltaTime loopState prevInput wEvents oldW = do
 
     -- Next frame
     unless (newInput ^. quitEvent || isQuitGame loopState) $
-        gameLoop r texts currentTime frameTime newLoopState newInput newWEvents newW'
+        gameLoop r texts (drop 10 rand) currentTime frameTime newLoopState newInput newWEvents newW'
     
     where
         -- update world only if loop is in 'Playing' state 
         updateWorlIfPlaying newInput Playing =
-            stepWorld deltaTime newInput $
+            stepWorld deltaTime newInput rand $
                 processWorldEvents wEvents oldW
         updateWorlIfPlaying newInput _       = (mempty, oldW)
 

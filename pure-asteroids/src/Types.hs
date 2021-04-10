@@ -24,8 +24,6 @@ data World =
 
 
 -- | Ship state structure
--- TODO  add a flag for when the ship is hit,
--- explodes and is invincible for a short time after respawn
 data Ship =
     Ship 
     { _sPosition :: Position
@@ -109,7 +107,6 @@ type Angle = Double
 type Time = Int
 
 
-
 -- | Structure for event passing between entity groups
 data WorldEvents =
     WorldEvents
@@ -173,5 +170,4 @@ makeLenses ''Position
 makeLenses ''Velocity
 makeLenses ''Score
 makeLenses ''WorldEvents
-
 

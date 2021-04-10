@@ -6,6 +6,7 @@ module Main where
 import Initialize
 import Resources
 import GameLoop
+import Utility
 
 import qualified SDL
 import qualified SDL.Font as FNT
@@ -35,8 +36,9 @@ main = do
     SDL.showWindow window
 
     texts <- loadTexts renderer
+    let rand = randStreamGen (0, 100) 420 -- todo better seed
 
-    gameLoop renderer texts 0 16 MainMenu mempty mempty initializeWorld
+    gameLoop renderer texts rand 0 16 MainMenu mempty mempty initializeWorld
         `catch` \(e :: SomeException) -> putStrLn ("Whoopsie: " ++ show e)
 
     -- TODO  destroy textures

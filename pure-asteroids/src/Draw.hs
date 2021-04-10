@@ -66,7 +66,7 @@ drawUfo renderer u =
             [ V2 0 size
             , V2 size 0
             , V2 (3 * size) 0
-            , V2 size (4 * size)
+            , V2 (4 * size) size
             , V2 (3 * size) (2 * size)
             , V2 size (2 * size)
             ]

@@ -8,18 +8,19 @@ import Step.Asteroids ( stepAsteroids )
 import Step.Ufos ( stepUfos )
 import Step.Bullets ( stepBullets )
 import Initialize ( safeRandomAsteroidsSpawn )
+import Utility
 
 import qualified Data.HashMap.Strict as HM
 import Control.Lens
 
 
 
-stepWorld :: Time -> InputState -> World -> (WorldEvents, World)
-stepWorld deltaTime input oldW =
+stepWorld :: Time -> InputState -> RandomStream Double -> World -> (WorldEvents, World)
+stepWorld deltaTime input rand oldW =
     let
         (eventsS, newShip) = stepShip deltaTime input oldW $ oldW ^. wShip
         (eventsB, newBullets) = stepBullets deltaTime input oldW $ oldW ^. wBullets
-        (eventsU, newUfo) = stepUfos deltaTime oldW $ oldW ^. wUfos
+        (eventsU, newUfo) = stepUfos deltaTime rand oldW $ oldW ^. wUfos
         (eventsScr, newScore) = (mempty, oldW ^. wScore)
     in
         (,) (eventsS <> eventsB <> eventsScr) $

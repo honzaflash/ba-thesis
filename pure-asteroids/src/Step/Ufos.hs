@@ -5,6 +5,7 @@ module Step.Ufos
 
 import Types
 import Step.Common
+import Utility
 
 import Linear
 import Control.Lens
@@ -12,11 +13,15 @@ import qualified Data.HashMap.Strict as HM
 
 
 
-stepUfos :: Time -> World -> Ufos -> (WorldEvents, Ufos)
-stepUfos dT w = traverse (stepUfo dT w)
+stepUfos :: Time -> RandomStream Double -> World -> Ufos -> (WorldEvents, Ufos)
+stepUfos dT rand w =
+    fmap (HM.filter ufoLives . spawnUfo rand (w ^. wWaveTime)) .
+        traverse (stepUfo dT w)
+    where
+        ufoLives = (0 <) . view uTtl
 
 
--- TODO  random velocity/direction change (stride)
+-- WouldBeNice: random velocity/direction change (stride)
 -- TODO  shooting
 stepUfo :: Time -> World -> Ufo -> (WorldEvents, Ufo)
 stepUfo dT w ufo = 
@@ -52,3 +57,27 @@ stepUfo dT w ufo =
         isInside a = (fromIntegral (a ^. aSize) >) . distance (a ^. aPosition . pVect)
 
 
+spawnUfo :: RandomStream Double -> Time -> Ufos -> Ufos
+spawnUfo rand time ufos
+    | time > 10000 &&
+        head rand < spawnChance =
+            insertNewUfo (drop 1 rand) ufos
+    | otherwise = ufos
+
+    where
+        -- WouldBeNice - better chance / limits on spawning
+        spawnChance = 0.1 + 0.00000008 * fromIntegral time
+
+        insertNewUfo rand' = insertUfo newUfo
+        insertUfo u = HM.insert (u ^. uId) u
+        newUfo =
+            Ufo
+            { _uId = newUfoId
+            , _uPosition = Position $ V2 0 0
+            , _uVelocity = Velocity $ V2 6 0
+            , _uSize = LargeSaucer
+            , _uTtl = 15000
+            , _uTimeToShoot = 1000
+            }
+        newUfoId = (1 +) $ maximum $ 0 : HM.keys ufos
+        

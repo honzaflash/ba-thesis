@@ -41,6 +41,10 @@ shipPoints s =
         facing = angle $ s ^. sAngle
 
 
+-- * Pseudo-random generators
+
+type RandomStream a = [a]
+
 -- | Pure pseudo-random V2 generator
 randV2StreamGen ::
     ( UniformRange a
