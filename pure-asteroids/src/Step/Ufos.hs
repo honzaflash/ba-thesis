@@ -48,7 +48,7 @@ stepUfo dT w ufo =
                 , V2  left          (top + height)
                 , V2 (left + width) (top + height)
                 ]
-        -- is a point inside of an asteroid circle hitbox
+        -- is a point inside of an asteroid's circle hitbox
         isInside a = (fromIntegral (a ^. aSize) >) . distance (a ^. aPosition . pVect)
 
 

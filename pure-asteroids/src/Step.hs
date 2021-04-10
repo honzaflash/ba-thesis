@@ -6,7 +6,8 @@ import Input ( InputState )
 import Step.Ship ( stepShip )
 import Step.Asteroids ( stepAsteroids )
 import Step.Ufos ( stepUfos )
-import Step.Bullets
+import Step.Bullets ( stepBullets )
+import Initialize ( safeRandomAsteroidSpawn )
 
 import qualified Data.HashMap.Strict as HM
 import Control.Lens
@@ -22,17 +23,26 @@ stepWorld deltaTime input oldW =
         (eventsScr, newScore) = (mempty, oldW ^. wScore)
     in
         (,) (eventsS <> eventsB <> eventsScr) $
+        checkWave $
         oldW
             & wShip      .~ newShip
             & wAsteroids %~ stepAsteroids deltaTime
             & wBullets   .~ newBullets
             & wUfos      .~ newUfo
-            & wTime      +~ deltaTime
+            & wWaveTime  +~ deltaTime
             & wScore     .~ newScore
-
-
-
-
-
-
+    where
+        checkWave w
+            | null (w ^. wAsteroids) &&
+                w ^. wWavePause <  2000 =
+                          w
+                           & wWavePause +~ deltaTime
+                           & wWaveTime .~ 0
+            | null (w ^. wAsteroids) &&
+                w ^. wWavePause >= 2000 =
+                          w
+                           & wWavePause .~ 0
+                           & wAsteroids .~ safeRandomAsteroidSpawn (w ^. wWaveNum + 4)
+                           & wWaveNum +~ 1
+            | otherwise = w
 

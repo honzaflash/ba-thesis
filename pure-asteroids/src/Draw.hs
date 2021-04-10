@@ -35,8 +35,10 @@ drawWorld :: SDL.Renderer -> Texts -> World -> IO ()
 drawWorld renderer texts w = do
     SDL.rendererDrawColor renderer SDL.$= V4 255 255 255 255
     drawShip renderer $ w ^. wShip
+    drawLives renderer texts $ w ^. wShip . sLives
     mapM_ (drawAsteroid renderer) $ w ^. wAsteroids
     mapM_ (drawBullet renderer) $ w ^. wBullets
+    mapM_ (drawUfo renderer) $ w ^. wUfos
     drawScore renderer texts $ w ^. wScore
 
 
@@ -48,6 +50,7 @@ drawAsteroid :: SDL.Renderer -> Asteroid -> IO ()
 drawAsteroid renderer a =
     drawShape renderer asteroidShape
     where
+        -- generates regular heptagon of given size
         asteroidShape =
             map ((+ a ^. aPosition . pVect) . asteroidVertex) [1..7]
         asteroidVertex i = V2 ((*) sizeF . cos $ pi * 2 / 7 * i)
@@ -55,13 +58,36 @@ drawAsteroid renderer a =
         sizeF = fromIntegral $ a ^. aSize
 
 
+drawUfo :: SDL.Renderer -> Ufo -> IO ()
+drawUfo renderer u =
+    drawShape renderer ufoShape
+    where
+        ufoShape = map (+ u ^. uPosition . pVect)
+            [ V2 0 size
+            , V2 size 0
+            , V2 (3 * size) 0
+            , V2 size (4 * size)
+            , V2 (3 * size) (2 * size)
+            , V2 size (2 * size)
+            ]
+        size = case u ^. uSize of
+                   SmallSaucer -> 10
+                   LargeSaucer -> 20
+
+
 drawBullet :: SDL.Renderer -> Bullet -> IO ()
-drawBullet renderer b =
-    SDL.drawPoint renderer $ SDL.P $ fmap round $ b ^. bPosition . pVect
+drawBullet renderer =
+    SDL.drawPoint renderer . SDL.P . fmap round . view (bPosition . pVect)
 
 
 drawScore :: SDL.Renderer -> Texts -> Score -> IO ()
-drawScore renderer texts = drawNumber renderer texts (V2 20 20) . _sValue
+drawScore renderer texts =
+    drawNumber renderer texts (V2 (windowWidth `div` 2) 20) . _sValue
+
+
+drawLives :: SDL.Renderer -> Texts -> Int -> IO ()
+drawLives renderer texts =
+    drawNumber renderer texts (V2 20 20)
 
 
 drawMainMenu :: SDL.Renderer -> Texts -> IO ()
@@ -104,7 +130,7 @@ drawNumber renderer texts pos = fold .
 
 drawCenteredTexts :: SDL.Renderer -> Texts -> [TextKey] -> IO ()
 drawCenteredTexts renderer texts = fold .
-    zipWith (drawCenteredText renderer texts) [100 * i | i <- [3..]]
+    zipWith (drawCenteredText renderer texts) [100 * i | i <- [2..]]
 
 
 drawCenteredText :: SDL.Renderer -> Texts -> CInt -> TextKey -> IO ()

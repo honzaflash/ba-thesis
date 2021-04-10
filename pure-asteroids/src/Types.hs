@@ -15,7 +15,9 @@ data World =
     , _wAsteroids :: Asteroids
     , _wBullets   :: Bullets
     , _wUfos      :: Ufos
-    , _wTime      :: Time
+    , _wWaveTime  :: Time
+    , _wWavePause :: Time
+    , _wWaveNum   :: Int
     , _wScore     :: Score
     }
     deriving Show
