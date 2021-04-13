@@ -56,8 +56,13 @@ processShipEvents :: [ShipEvent] -> Ship -> Ship
 processShipEvents =
     flip $ foldl processShipEvent
     where
-        processShipEvent ship HitE      = ship & sLives -~ 1
         processShipEvent ship GainLifeE = ship & sLives +~ 1
+        processShipEvent ship HitE      = ship
+                                            & sLives -~ 1
+                                            & sState %~
+                                                if ship ^. sLives > 1
+                                                    then id
+                                                    else const $ ShipExploding 500
 
 
 processUfosEvents :: [UfoEvent] -> Ufos -> Ufos
