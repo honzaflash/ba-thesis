@@ -73,6 +73,11 @@ data Bullet =
 
 data BulletShooter = ShotByShip | ShotByUfo deriving (Eq, Show)
 
+bulletSpeed :: Double
+bulletSpeed = 50
+initBulletTtl :: Int
+initBulletTtl = 1400
+
 
 -- | Ufos state structure
 type Ufos = HM.HashMap Int Ufo
@@ -112,19 +117,20 @@ data WorldEvents =
     WorldEvents
     { _forAsteroids :: [AsteroidEvent]
     , _forShip      :: [ShipEvent]
-    , _forUfos      :: [UfosEvent]
+    , _forUfos      :: [UfoEvent]
+    , _forBullets   :: [BulletEvent]
     , _forScore     :: [ScoreEvent]
     }
     deriving Show
 instance Semigroup WorldEvents where
-    (WorldEvents ae1 se1 ue1 scre1) <> (WorldEvents ae2 se2 ue2 scre2) =
-        WorldEvents (ae1 <> ae2) (se1 <> se2) (ue1 <> ue2) (scre1 <> scre2)
+    (WorldEvents aE1 sE1 uE1 bE1 scrE1) <> (WorldEvents aE2 sE2 uE2 bE2 scrE2) =
+        WorldEvents (aE1 <> aE2) (sE1 <> sE2) (uE1 <> uE2) (bE1 <> bE2) (scrE1 <> scrE2)
 instance Monoid WorldEvents where
-    mempty = WorldEvents [] [] [] []
+    mempty = WorldEvents [] [] [] [] []
 
 nullEvents :: WorldEvents -> Bool
-nullEvents (WorldEvents [] [] [] []) = True
-nullEvents _                         = False
+nullEvents (WorldEvents [] [] [] [] []) = True
+nullEvents _                            = False
 
 
 -- * Individual event types
@@ -140,8 +146,13 @@ data ShipEvent =
     deriving Show
 
 -- | Ufos event
-newtype UfosEvent = 
+newtype UfoEvent = 
     DestroyE Int
+    deriving Show
+
+-- | Bullets event
+newtype BulletEvent = 
+    UfoShootsE (Position, Velocity)
     deriving Show
 
 -- | Score event

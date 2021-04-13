@@ -1,4 +1,6 @@
-module Step where
+module Step 
+( stepWorld
+) where
 
 
 import Types
@@ -20,16 +22,16 @@ stepWorld deltaTime input rand oldW =
     let
         (eventsS, newShip) = stepShip deltaTime input oldW $ oldW ^. wShip
         (eventsB, newBullets) = stepBullets deltaTime input oldW $ oldW ^. wBullets
-        (eventsU, newUfo) = stepUfos deltaTime rand oldW $ oldW ^. wUfos
+        (eventsU, newUfos) = stepUfos deltaTime rand oldW $ oldW ^. wUfos
         (eventsScr, newScore) = (mempty, oldW ^. wScore)
     in
-        (,) (eventsS <> eventsB <> eventsScr) $
+        (,) (eventsS <> eventsB <> eventsU <> eventsScr) $
         checkWave $
         oldW
             & wShip      .~ newShip
             & wAsteroids %~ stepAsteroids deltaTime
             & wBullets   .~ newBullets
-            & wUfos      .~ newUfo
+            & wUfos      .~ newUfos
             & wWaveTime  +~ deltaTime
             & wScore     .~ newScore
     where

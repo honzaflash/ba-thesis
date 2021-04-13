@@ -31,14 +31,34 @@ targetIterationTime = 1000 `div` targetFPS
 -- | Calculates the ship vertices' positions
 shipPoints :: Ship -> [V2 Double]
 shipPoints s =
-    [ sPos - (17 *^ facing) + (17 *^ perp facing) -- left
-    , sPos + (25 *^ facing)
-    , sPos - (17 *^ facing) - (17 *^ perp facing) -- right
-    , sPos - (8 *^ facing)
-    ]
+    map (+ sPos)
+        [ -17 *^ (facing - perp facing) -- left
+        ,  25 *^  facing                -- front tip
+        , -17 *^ (facing + perp facing) -- right
+        , -8  *^  facing                -- back wedge point
+        ]
     where
         sPos = s ^. sPosition . pVect
         facing = angle $ s ^. sAngle
+
+
+-- | Calculates the ufos vertices' positions
+ufoPoints :: Ufo -> [V2 Double]
+ufoPoints u =
+    map (+ uPos)
+        [ V2 (-2 * size)   0
+        , V2 (-    size) (-size)
+        , V2       size  (-size)
+        , V2 ( 2 * size)   0
+        , V2       size    size
+        , V2 (-    size)   size
+        ]
+    where
+        uPos = u ^. uPosition . pVect
+        size = case u ^. uSize of
+                   SmallSaucer -> 10
+                   LargeSaucer -> 20
+
 
 
 -- * Pseudo-random generators

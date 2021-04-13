@@ -12,13 +12,6 @@ import qualified Data.HashMap.Strict as HM
 
 
 
--- | Constants
-bulletSpeed :: Double
-bulletSpeed = 50
-initBulletTtl :: Int
-initBulletTtl = 1400
-
-
 -- | Step function for the entire Bullets collection
 stepBullets :: Time -> InputState -> World -> Bullets -> (WorldEvents, Bullets)
 stepBullets dT input w =
@@ -78,15 +71,14 @@ stepBullet dT w oldB =
 
 shoot :: InputState -> World -> Bullets -> Bullets
 shoot input w =
-    -- fold ufoShooting (w ^. wUfos) . -- TODO  shoot every second
     if wasPressed input spaceKeycode
         then insertBullet
         else id
 
     where
         insertBullet bullets = 
-            let newId = maximum (1 : HM.keys bullets) + 1 in
-                HM.insert newId (newBullet newId) bullets
+            let newId = maximum (1 : HM.keys bullets) + 1
+            in  HM.insert newId (newBullet newId) bullets
 
         newBullet newId =
             Bullet newId newBulletPosition newBulletVelocity ShotByShip initBulletTtl

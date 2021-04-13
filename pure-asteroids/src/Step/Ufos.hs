@@ -1,5 +1,6 @@
 module Step.Ufos
 ( stepUfos
+, predictiveShooting
 ) where
 
 
@@ -22,62 +23,85 @@ stepUfos dT rand w =
 
 
 -- WouldBeNice: random velocity/direction change (stride)
--- TODO  shooting
 stepUfo :: Time -> World -> Ufo -> (WorldEvents, Ufo)
-stepUfo dT w ufo = 
+stepUfo dT w oldU = 
     (,) events $
-    ufo
-      & uPosition %~ move dT (ufo ^. uVelocity)
-      & uTtl %~ subtract dT
+    oldU
+      & uPosition %~ move dT (oldU ^. uVelocity)
+      & uTimeToShoot %~ (if null shootEvents then subtract dT else const 1000)
+      & uTtl %~ if null eventsForAsteroids then subtract dT else const 0
 
     where
         events = mempty
-                    -- & forBullets   .~ shootEvents TODO
+                    & forBullets   .~ shootEvents
                     & forAsteroids .~ eventsForAsteroids
-
-        shootEvents = [] -- TODO
-
+        
+        -- asteroid x ufo collision events
         eventsForAsteroids = [ BreakE $ a ^. aId |
                                 a <- HM.elems $ w ^. wAsteroids,
                                 astCollision a ]
-        astCollision a = any (isInside a) ufoHitbox
-        ufoHitbox =
-            let
-                (V2 width height) = case ufo ^. uSize of
-                                        SmallSaucer -> V2 16 16
-                                        LargeSaucer -> V2 32 32
-                (V2 left top) = ufo ^. uPosition . pVect - V2 (width/2) (height/2)
-            in
-                [ V2  left           top
-                , V2 (left + width)  top
-                , V2  left          (top + height)
-                , V2 (left + width) (top + height)
-                ]
-        -- is a point inside of an asteroid's circle hitbox
+        astCollision a = any (isInside a) $ ufoPoints oldU
+        -- returns whether a point is inside of an asteroid's circle hitbox
         isInside a = (fromIntegral (a ^. aSize) >) . distance (a ^. aPosition . pVect)
 
+        -- generates an event for when a ufo shoots
+        shootEvents =
+            [ UfoShootsE (oldU ^. uPosition, bulletVelocity)
+                | oldU ^. uTimeToShoot <= 0 ]
+        bulletVelocity =
+            Velocity $ (bulletSpeed *^) $ angle $
+                case oldU ^. uSize of
+                    SmallSaucer -> predictiveShooting oldU (w ^. wShip)
+                    LargeSaucer -> simpleShooting     oldU (w ^. wShip)
 
+
+-- | Predicts ship's position based on its current velocity
+--   and returns an angle for the bullet's velocity
+predictiveShooting :: Ufo -> Ship -> Double
+predictiveShooting u s =
+    unangle (sPos - uPos) + asin (norm sVel * sin beta / bulletSpeed)
+                   -- law of sines
+    where
+        beta = unangle (uPos - sPos) - unangle sVel
+        sVel = s ^. sVelocity . vVect
+        sPos = s ^. sPosition . pVect
+        uPos = u ^. uPosition . pVect
+
+
+-- | Returns an angle for the bullet's velocity
+--   based on the ship's current position
+simpleShooting :: Ufo -> Ship -> Double
+simpleShooting u s =
+    unangle (sPos - uPos)
+    where
+        sPos = s ^. sPosition . pVect
+        uPos = u ^. uPosition . pVect
+
+
+-- | randomly and increasingly spawn ufos
 spawnUfo :: RandomStream Double -> Time -> Ufos -> Ufos
 spawnUfo rand time ufos
-    | time > 10000 &&
-        head rand < spawnChance =
-            insertNewUfo (drop 1 rand) ufos
+    | time > 15000 &&
+        rand !! 1 < spawnChance =
+            insertNewUfo ufos
     | otherwise = ufos
 
     where
         -- WouldBeNice - better chance / limits on spawning
-        spawnChance = 0.1 + 0.00000008 * fromIntegral time
+        spawnChance = min 0.2 $ 0.1 + 0.00000008 * fromIntegral time
 
-        insertNewUfo rand' = insertUfo newUfo
+        insertNewUfo = insertUfo newUfo
         insertUfo u = HM.insert (u ^. uId) u
         newUfo =
             Ufo
             { _uId = newUfoId
-            , _uPosition = Position $ V2 0 0
+            , _uPosition = Position $ V2 0 startY
             , _uVelocity = Velocity $ V2 6 0
-            , _uSize = LargeSaucer
-            , _uTtl = 15000
+            , _uSize = if rand !! 2 < sizeChance then SmallSaucer else LargeSaucer
+            , _uTtl = 16000
             , _uTimeToShoot = 1000
             }
         newUfoId = (1 +) $ maximum $ 0 : HM.keys ufos
-        
+        startY = (rand !! 3) / 100 * windowHeightF
+        sizeChance = max 20 $ min 80 $ 0.0001 * fromIntegral time
+

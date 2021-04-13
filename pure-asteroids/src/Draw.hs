@@ -43,7 +43,8 @@ drawWorld renderer texts w = do
 
 
 drawShip :: SDL.Renderer -> Ship -> IO ()
-drawShip renderer ship = drawShape renderer $ shipPoints ship
+drawShip renderer =
+    drawShape renderer . shipPoints
 
 
 drawAsteroid :: SDL.Renderer -> Asteroid -> IO ()
@@ -59,20 +60,8 @@ drawAsteroid renderer a =
 
 
 drawUfo :: SDL.Renderer -> Ufo -> IO ()
-drawUfo renderer u =
-    drawShape renderer ufoShape
-    where
-        ufoShape = map (+ u ^. uPosition . pVect)
-            [ V2 0 size
-            , V2 size 0
-            , V2 (3 * size) 0
-            , V2 (4 * size) size
-            , V2 (3 * size) (2 * size)
-            , V2 size (2 * size)
-            ]
-        size = case u ^. uSize of
-                   SmallSaucer -> 10
-                   LargeSaucer -> 20
+drawUfo renderer=
+    drawShape renderer . ufoPoints
 
 
 drawBullet :: SDL.Renderer -> Bullet -> IO ()

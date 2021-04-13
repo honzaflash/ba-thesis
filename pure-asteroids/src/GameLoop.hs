@@ -38,7 +38,7 @@ gameLoop r texts rand prevTime deltaTime loopState prevInput wEvents oldW = do
 
     
     -- World updating
-    let (newWEvents, newW) = updateWorlIfPlaying newInput loopState
+    let (newWEvents, newW) = updateWorldIfPlaying newInput loopState
     
     -- World drawing
     drawScene r texts loopState newW 
@@ -57,17 +57,17 @@ gameLoop r texts rand prevTime deltaTime loopState prevInput wEvents oldW = do
     
     where
         -- update world only if loop is in 'Playing' state 
-        updateWorlIfPlaying newInput Playing =
+        updateWorldIfPlaying newInput Playing =
             stepWorld deltaTime newInput rand $
                 processWorldEvents wEvents oldW
-        updateWorlIfPlaying newInput _       = (mempty, oldW)
+        updateWorldIfPlaying newInput _       = (mempty, oldW)
 
         -- State transition function
         nextLoopState input newW =
             case loopState of
                 Playing
                     | isRespawning (newW ^. wShip . sState) &&
-                        newW ^. wShip . sLives == 0  -> GameOver
+                        newW ^. wShip . sLives <= 0  -> GameOver
                     | wasPressed input escapeKeycode -> PauseMenu
                     | otherwise                      -> loopState
                 PauseMenu

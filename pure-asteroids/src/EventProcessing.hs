@@ -19,7 +19,8 @@ processWorldEvents events world =
     world
         & wAsteroids %~ processAsteroidsEvents (events ^. forAsteroids)
         & wShip      %~ processShipEvents      (events ^. forShip)
-        -- & wUfos      %~ processUfosEvents      (events ^. forUfos)
+        & wUfos      %~ processUfosEvents      (events ^. forUfos)
+        & wBullets   %~ processBulletEvents    (events ^. forBullets)
         & wScore     %~ processScoreEvents     (events ^. forScore)
 
 
@@ -59,8 +60,26 @@ processShipEvents =
         processShipEvent ship GainLifeE = ship & sLives +~ 1
 
 
--- processUfosEvents :: [UfosEvent] -> Ufos -> Ufos
--- processUfosEvents = const id
+processUfosEvents :: [UfoEvent] -> Ufos -> Ufos
+processUfosEvents =
+    flip $ foldl const
+
+
+processBulletEvents :: [BulletEvent] -> Bullets -> Bullets
+processBulletEvents =
+    flip $ foldl processBulletEvent
+    where
+        processBulletEvent :: Bullets -> BulletEvent -> Bullets
+        processBulletEvent bullets (UfoShootsE (pos, vel)) =
+            flip insertBullet bullets $
+                Bullet
+                { _bId = (+1) $ maximum $ 1 : HM.keys bullets
+                , _bPosition = pos
+                , _bVelocity = vel
+                , _bTtl = initBulletTtl
+                , _bShooter = ShotByUfo
+                }
+        insertBullet b = HM.insert (b ^. bId) b
 
 
 processScoreEvents :: [ScoreEvent] -> Score -> Score
