@@ -70,7 +70,8 @@ stepPlayingShip dT input w oldS =
 
 -- | step function for ship in the exploding state
 stepExplodingShip :: Time -> Ship -> (WorldEvents, Ship)
-stepExplodingShip dT ship = (,) mempty $
+stepExplodingShip dT ship =
+    (,) mempty $
     ship
       & sAngle +~ 0.01 * fromIntegral dT -- just spin
       & sState %~ stepShipState dT
@@ -91,7 +92,8 @@ stepExplodingShip dT ship = (,) mempty $
 
 -- | step function for ship in the respawning state
 stepRespawningShip :: Time -> InputState -> Ship -> (WorldEvents, Ship)
-stepRespawningShip dT input ship = (,) mempty $
+stepRespawningShip dT input ship =
+    (,) mempty $
     ship
       & sPosition         %~ move dT (ship ^. sVelocity)
       & sVelocity . vVect %~ thrust dT input (ship ^. sAngle) . decelerate dT

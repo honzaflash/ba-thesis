@@ -87,7 +87,7 @@ data Ufo =
     , _uPosition    :: Position
     , _uVelocity    :: Velocity
     , _uSize        :: UfoSize
-    , _uTtl         :: Time -- reaches 0 <--> reaches the end of the screen, and is destroyed
+    , _uTtl         :: Time -- reaches 0 <=> reaches the end of the screen, and is destroyed
     , _uTimeToShoot :: Time -- when it reaches 0 ufo will shoot
     }
     deriving Show
@@ -96,7 +96,12 @@ data UfoSize = LargeSaucer | SmallSaucer
     deriving Show
 
 
-newtype Score = Score { _sValue :: Int }
+-- | Score state structure
+data Score =
+    Score
+    { _sValue        :: Int
+    , _sLivesAwarded :: Int
+    }
     deriving Show
 
 

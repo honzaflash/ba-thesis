@@ -20,7 +20,7 @@ initializeWorld =
     , _wWaveTime  = 0
     , _wWavePause = 0
     , _wWaveNum   = 1
-    , _wScore     = Score 0
+    , _wScore     = Score 0 0
     }
 
 
