@@ -28,16 +28,16 @@ processAsteroidsEvents :: [AsteroidEvent] -> Asteroids -> Asteroids
 processAsteroidsEvents =
     flip $ foldl resolveBreakEvent
     where
-        resolveBreakEvent asteroids (BreakE id) =
-            case asteroids !? id of
+        resolveBreakEvent asteroids (BreakE idA) =
+            case asteroids !? idA of
                 Nothing -> asteroids
-                Just a  -> maybeBreak a id asteroids
+                Just a  -> maybeBreak a idA asteroids
         
-        maybeBreak a id asteroids
-            | minAsteroidSize < a ^. aSize = break a id asteroids
-            | otherwise                    = HM.delete id asteroids
+        maybeBreak a idA asteroids
+            | minAsteroidSize < a ^. aSize = break a idA asteroids
+            | otherwise                    = HM.delete idA asteroids
 
-        break a id asteroids =
+        break a idA asteroids =
             let
                 part1 = a
                     & aVelocity . vVect %~ (\v -> v + perp v)
@@ -59,15 +59,15 @@ processShipEvents =
         processShipEvent ship GainLifeE = ship & sLives +~ 1
         processShipEvent ship HitE      = ship
                                             & sLives -~ 1
-                                            & sState %~
-                                                if ship ^. sLives > 1
-                                                    then id
-                                                    else const $ ShipExploding 500
+                                            & sState .~ ShipExploding 500
 
 
 processUfosEvents :: [UfoEvent] -> Ufos -> Ufos
 processUfosEvents =
-    flip $ foldl const
+    flip $ foldr resolveDestruction
+    where
+        resolveDestruction (DestroyE idU) =
+            HM.delete idU
 
 
 processBulletEvents :: [BulletEvent] -> Bullets -> Bullets
@@ -81,7 +81,7 @@ processBulletEvents =
                 { _bId = (+1) $ maximum $ 1 : HM.keys bullets
                 , _bPosition = pos
                 , _bVelocity = vel
-                , _bTtl = initBulletTtl
+                , _bTtl = initBulletTtl `div` 2
                 , _bShooter = ShotByUfo
                 }
         insertBullet b = HM.insert (b ^. bId) b

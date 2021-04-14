@@ -66,21 +66,21 @@ gameLoop r texts rand prevTime deltaTime loopState prevInput wEvents oldW = do
         nextLoopState input newW =
             case loopState of
                 Playing
-                    | isRespawning (newW ^. wShip . sState) &&
-                        newW ^. wShip . sLives <= 0  -> GameOver
-                    | wasPressed input escapeKeycode -> PauseMenu
-                    | otherwise                      -> loopState
+                    | isRespawning (newW ^. wShip . sState)
+                         && newW ^. wShip . sLives <= 0 -> GameOver
+                    | wasPressed input escapeKeycode    -> PauseMenu
+                    | otherwise                         -> loopState
                 PauseMenu
-                    | wasPressed input spaceKeycode  -> Playing
-                    | wasPressed input escapeKeycode -> MainMenu
-                    | otherwise                      -> loopState
+                    | wasPressed input spaceKeycode     -> Playing
+                    | wasPressed input escapeKeycode    -> MainMenu
+                    | otherwise                         -> loopState
                 GameOver
-                    | wasPressed input spaceKeycode  -> MainMenu
-                    | otherwise                      -> loopState
+                    | wasPressed input spaceKeycode     -> MainMenu
+                    | otherwise                         -> loopState
                 MainMenu
-                    | wasPressed input spaceKeycode  -> Playing
-                    | wasPressed input escapeKeycode -> QuitGame
-                    | otherwise                      -> loopState
+                    | wasPressed input spaceKeycode     -> Playing
+                    | wasPressed input escapeKeycode    -> QuitGame
+                    | otherwise                         -> loopState
         isRespawning (ShipRespawning _) = True
         isRespawning  _                 = False
 

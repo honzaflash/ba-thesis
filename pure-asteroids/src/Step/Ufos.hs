@@ -28,7 +28,7 @@ stepUfo dT w oldU =
     (,) events $
     oldU
       & uPosition %~ move dT (oldU ^. uVelocity)
-      & uTimeToShoot %~ (if null shootEvents then subtract dT else const 1000)
+      & uTimeToShoot %~ (if null shootEvents then subtract dT else const 2000)
       & uTtl %~ if null eventsForAsteroids then subtract dT else const 0
 
     where
@@ -53,6 +53,7 @@ stepUfo dT w oldU =
                 case oldU ^. uSize of
                     SmallSaucer -> predictiveShooting oldU (w ^. wShip)
                     LargeSaucer -> simpleShooting     oldU (w ^. wShip)
+        ufoBulletSpeed = bulletSpeed * 0.5
 
 
 -- | Predicts ship's position based on its current velocity
@@ -72,8 +73,10 @@ predictiveShooting u s =
 --   based on the ship's current position
 simpleShooting :: Ufo -> Ship -> Double
 simpleShooting u s =
-    unangle (sPos - uPos)
+    snapToEights $ unangle (sPos - uPos)
     where
+        snapToEights alfa =
+            fromIntegral (round (alfa / 2 / pi * 8) :: Int) / 8 * 2 * pi
         sPos = s ^. sPosition . pVect
         uPos = u ^. uPosition . pVect
 
@@ -88,7 +91,7 @@ spawnUfo rand time ufos
 
     where
         -- WouldBeNice - better chance / limits on spawning
-        spawnChance = min 0.2 $ 0.1 + 0.00000008 * fromIntegral time
+        spawnChance = min 0.5 $ 0.1 + 0.00000008 * fromIntegral time
 
         insertNewUfo = insertUfo newUfo
         insertUfo u = HM.insert (u ^. uId) u
@@ -99,7 +102,7 @@ spawnUfo rand time ufos
             , _uVelocity = Velocity $ V2 6 0
             , _uSize = if rand !! 2 < sizeChance then SmallSaucer else LargeSaucer
             , _uTtl = 16000
-            , _uTimeToShoot = 1000
+            , _uTimeToShoot = 1500
             }
         newUfoId = (1 +) $ maximum $ 0 : HM.keys ufos
         startY = (rand !! 3) / 100 * windowHeightF

@@ -28,34 +28,36 @@ stepBullet dT w oldB =
        & bTtl %~ if nullEvents events then subtract dT else const (-1)
     
     where
-        events = 
-            asteroidCollisionEvents <> 
-            ufosCollisionEvents <> 
-            shipCollisionEvents
+        events = asteroidCollisionEvents 
+                 <> shipCollisionEvents
+                 <> ufosCollisionEvents 
         
-        -- getting events from collisions with asteroids
+        -- Collisions with ASTEROIDS
         asteroidCollisionEvents =
-            foldl generateEvents mempty $ HM.elems $ w ^. wAsteroids
-        generateEvents events' a
+            foldl genEventsAst mempty $ HM.elems $ w ^. wAsteroids
+
+        genEventsAst events' a
             | astCollision a =
                     events'
-                       & forAsteroids %~ (BreakE (a ^. aId) :)
-                       & forScore     %~ if oldB ^. bShooter == ShotByShip
-                                             then (IncreaseE (astReward a) :)
-                                             else id
+                        & forAsteroids %~ (BreakE (a ^. aId) :)
+                        & forScore     %~ if oldB ^. bShooter == ShotByShip
+                                              then (IncreaseE (astReward a) :)
+                                              else id
             | otherwise = events'
+
         astCollision a = isInside a $ oldB ^. bPosition . pVect 
         isInside a = (fromIntegral (a ^. aSize) >) . distance (a ^. aPosition . pVect)
+        
         astReward a
             | a ^. aSize == initAsteroidSize                 = 20
             | a ^. aSize == initAsteroidSize `div` 2         = 50
             | a ^. aSize == initAsteroidSize `div` 2 `div` 2 = 100
             -- otherwise = boom! something is very wrong
 
-        -- getting events from collision with ship
-        shipCollisionEvents = mempty & forShip %~ if shipColliding
-                                                      then (HitE :)
-                                                      else id
+        -- Collision with SHIP
+        shipCollisionEvents =
+            mempty & forShip %~ if shipColliding then (HitE :) else id
+
         shipColliding =
             -- using rectangular hit box (just like the original Atari)
             -- might be worth an upgrade though
@@ -63,10 +65,40 @@ stepBullet dT w oldB =
                 (V2 width height) = V2 40 40
                 (V2 left top) = w ^. wShip . sPosition . pVect - V2 20 20
             in
-                (oldB ^. bShooter /= ShotByShip) &&
-                (left < bx && bx < left + width && top < by && by < top + height)
+                oldB ^. bShooter == ShotByUfo
+                && (left < bx && bx < left + width && top < by && by < top + height)
 
-        ufosCollisionEvents = mempty -- TODO
+        -- Collision with UFOS
+        ufosCollisionEvents =
+            foldl genEventsUfos mempty $ HM.elems $ w ^. wUfos
+        
+        genEventsUfos events' u
+            | ufoCollision u =
+                    events'
+                        & forUfos  %~ (DestroyE (u ^. uId) :)
+                        & forScore %~ if oldB ^. bShooter == ShotByShip
+                                              then (IncreaseE (ufoReward u) :)
+                                              else id
+            | otherwise = events'
+        
+        ufoCollision u =
+            -- just an elliptical hit box
+            let bPos = oldB ^. bPosition . pVect
+                uPos = u ^. uPosition . pVect
+                eccentricity = V2 (uSizeMult * 18) 0
+                focus1 = uPos - eccentricity
+                focus2 = uPos + eccentricity
+                mjAxis = uSizeMult * 40
+                uSizeMult = case u ^. uSize of
+                                SmallSaucer -> 1
+                                LargeSaucer -> 2
+            in
+                oldB ^. bShooter == ShotByShip
+                && norm (bPos - focus1) + norm (bPos - focus2) < mjAxis
+        
+        ufoReward u = case u ^. uSize of
+                          SmallSaucer -> 1000
+                          LargeSaucer -> 200
 
 
 shoot :: InputState -> World -> Bullets -> Bullets

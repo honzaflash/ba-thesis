@@ -87,7 +87,7 @@ thrust :: Time -> InputState -> Angle -> V2 Double -> V2 Double
 thrust dT input direction = if input ^. isHeldW 
                                then (+ thrustStrength *^ angle direction)
                                else id
-    where thrustStrength = 0.06 * fromIntegral dT
+    where thrustStrength = 0.04 * fromIntegral dT
 
 
 -- | Constant deceletration over time
@@ -100,7 +100,7 @@ decelerate dT = ((0.985 ** (fromIntegral dT / 16)) *^)
 steering :: Time -> InputState -> Angle
 steering dT input = (if input ^. isHeldA then (-steeringStrength) else 0)
                     + if input ^. isHeldD then steeringStrength else 0
-    where steeringStrength = 0.0035 * fromIntegral dT
+    where steeringStrength = 0.0025 * fromIntegral dT
 
 
 -- | State decrementor
