@@ -40,13 +40,32 @@ stepPlayingShip dT input w oldS =
                     & forUfos      .~ eventsForUfos
 
         eventsForAsteroids =
-            [ BreakE $ a ^. aId |
-                a <- HM.elems $ w ^. wAsteroids,
-                astCollision a ]
-        astCollision a = any (isInside a) $ take 3 $ shipPoints oldS -- 4th doesn't need to be checked
-        isInside a = (fromIntegral (a ^. aSize) >) . distance (a ^. aPosition . pVect)
+            [ BreakE $ a ^. aId
+                | a <- HM.elems $ w ^. wAsteroids
+                , astCollision a
+            ]
+        astCollision a = any (isInsideAst a) $ take 3 $ shipPoints oldS -- 4th doesn't need to be checked
+        isInsideAst a = (fromIntegral (a ^. aSize) >) . distance (a ^. aPosition . pVect)
 
-        eventsForUfos = []
+        -- ship colliding with ufo
+        eventsForUfos =
+            [ DestroyE $ u ^. uId
+                | u <- HM.elems $ w ^. wUfos
+                , ufoCollision u
+            ]
+        ufoCollision u = any (isInsideUfo u) $ take 3 $ shipPoints oldS
+        isInsideUfo u point =
+            -- just an elliptical hit box
+            let uPos = u ^. uPosition . pVect
+                eccentricity = V2 (uSizeMult * 18) 0
+                focus1 = uPos - eccentricity
+                focus2 = uPos + eccentricity
+                mjAxis = uSizeMult * 40
+                uSizeMult = case u ^. uSize of
+                                SmallSaucer -> 1
+                                LargeSaucer -> 2
+            in
+                distance point focus1 + distance point focus2 < mjAxis
 
 
 -- | step function for ship in the exploding state
