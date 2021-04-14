@@ -81,13 +81,13 @@ stepExplodingShip dT ship =
         resetIfTransitioningState ship =
             case ship ^. sState of
                 ShipExploding t
-                    | t < 0     -> resetShip ship
+                    | t <= 0    -> resetShip ship
                 _               -> ship
         resetShip ship =
             ship
               & sPosition . pVect .~ V2 (windowWidthF / 2) (windowHeightF / 2)
               & sVelocity . vVect .~ V2 0 0
-              & sAngle            .~ 0
+              & sAngle            .~ pi / 2 * 3
 
 
 -- | step function for ship in the respawning state
