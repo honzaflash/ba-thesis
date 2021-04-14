@@ -16,10 +16,10 @@ import qualified Data.HashMap.Strict as HM
 
 stepUfos :: Time -> RandomStream Double -> World -> Ufos -> (WorldEvents, Ufos)
 stepUfos dT rand w =
-    fmap (HM.filter ufoLives . spawnUfo rand (w ^. wWaveTime)) .
+    fmap (filterOutDeadUfos . spawnUfo rand (w ^. wWaveTime)) .
         traverse (stepUfo dT w)
     where
-        ufoLives = (0 <) . view uTtl
+        filterOutDeadUfos = HM.filter $ (0 <) . view uTtl
 
 
 -- WouldBeNice: random velocity/direction change (stride)
@@ -91,7 +91,7 @@ spawnUfo rand time ufos
 
     where
         -- WouldBeNice - better chance / limits on spawning
-        spawnChance = min 0.5 $ 0.1 + 0.00000008 * fromIntegral time
+        spawnChance = min 1 $ 0.1 + 0.0000005 * fromIntegral time
 
         insertNewUfo = insertUfo newUfo
         insertUfo u = HM.insert (u ^. uId) u
@@ -106,5 +106,5 @@ spawnUfo rand time ufos
             }
         newUfoId = (1 +) $ maximum $ 0 : HM.keys ufos
         startY = (rand !! 3) / 100 * windowHeightF
-        sizeChance = max 20 $ min 80 $ 0.0001 * fromIntegral time
+        sizeChance = max 20 $ min 80 $ 0.001 * fromIntegral time
 

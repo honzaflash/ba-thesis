@@ -53,8 +53,8 @@ gameLoop r texts rand prevTime deltaTime loopState prevInput wEvents oldW = do
 
     -- Next frame
     unless (newInput ^. quitEvent || isQuitGame loopState) $
-        gameLoop r texts (drop 10 rand) currentTime frameTime newLoopState newInput newWEvents newW'
-    
+        gameLoop r texts (drop 3 rand) currentTime frameTime newLoopState newInput newWEvents newW'
+                               -- dropping 3 that were used in stepWorld
     where
         -- update world only if loop is in 'Playing' state 
         updateWorldIfPlaying newInput Playing =

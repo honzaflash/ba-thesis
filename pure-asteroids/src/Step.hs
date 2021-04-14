@@ -48,9 +48,9 @@ stepWorld deltaTime input rand oldW =
                         w
                          & wWavePause .~ 0
                          & wAsteroids .~ safeRandomAsteroidsSpawn
-                                                (oldW ^. wWaveTime)
-                                                (w ^. wShip)
-                                                (w ^. wWaveNum + 4)
+                                            (oldW ^. wWaveTime) -- time as a seed
+                                            (w ^. wShip)
+                                            (w ^. wWaveNum + 4)
                          & wWaveNum +~ 1
             | otherwise = w
 

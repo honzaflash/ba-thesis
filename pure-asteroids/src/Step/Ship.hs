@@ -18,8 +18,8 @@ stepShip :: Time -> InputState -> World -> Ship -> (WorldEvents, Ship)
 stepShip dT input w s =
     case s ^. sState of
         ShipAlive        -> stepPlayingShip dT input w s
-        ShipExploding t  -> stepExplodingShip dT s
-        ShipRespawning t -> stepRespawningShip dT input s
+        ShipExploding _  -> stepExplodingShip dT s
+        ShipRespawning _ -> stepRespawningShip dT input s
         
 
 stepPlayingShip :: Time -> InputState -> World -> Ship -> (WorldEvents, Ship)
@@ -81,8 +81,8 @@ stepExplodingShip dT ship =
         resetIfTransitioningState ship =
             case ship ^. sState of
                 ShipExploding t
-                    | t < 0 -> resetShip ship
-                _           -> ship
+                    | t < 0     -> resetShip ship
+                _               -> ship
         resetShip ship =
             ship
               & sPosition . pVect .~ V2 (windowWidthF / 2) (windowHeightF / 2)
