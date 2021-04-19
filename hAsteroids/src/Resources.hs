@@ -1,21 +1,24 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE KindSignatures #-}
 
 module Resources
-( loadResources
-, runWithResources
-  -- TODO freeResources
-, Resources
-, WithResources
-, EffectsWithResources
-, Textures
-, Texts
-, TextTexture(..)
-) where
+-- ( loadResources
+-- , runWithResources
+--   -- TODO freeResources
+-- , Resources
+-- , WithResources
+-- , EffectsWithResources
+-- , SystemWithResources
+-- , Textures
+-- , Texts
+-- , TextTexture(..)
+-- ) where
+where
 
 
-import Components ( Velocity, Position )
+import Components ( Velocity, Position, World )
 import Utility
 
 import qualified SDL
@@ -27,10 +30,44 @@ import GHC.Generics ( Generic )
 import Data.Hashable
 import Control.Monad.Reader
 import Linear
+import Apecs
 
 
 
 -- * Reader monad for resources and accompaning getters
+
+-- | Monad types
+type SystemWithResources a = SystemT World WithResources a
+type WithResources = ReaderT Resources IO
+
+
+-- | runReaderT wrapper
+runWithResources :: Resources -> WithResources () -> IO ()
+runWithResources = flip runReaderT
+
+
+-- | asks wrappers in System
+askForRenderer :: SystemWithResources SDL.Renderer
+askForRenderer = lift $ asks resRenderer
+
+askForTextures :: SystemWithResources Textures
+askForTextures = lift $ asks resTextures
+
+askForTexts :: SystemWithResources Texts
+askForTexts = lift $ asks resTexts
+
+askForRandPosGen :: SystemWithResources (IO Position)
+askForRandPosGen = lift $ asks resRandPosGen
+
+askForRandVelGen :: SystemWithResources (IO Velocity)
+askForRandVelGen = lift $ asks resRandVelGen
+
+askForRandPos :: SystemWithResources Position
+askForRandPos = lift $ asks resRandPosGen >>= liftIO
+
+askForRandVel :: SystemWithResources Velocity
+askForRandVel = lift $ asks resRandVelGen >>= liftIO
+
 
 -- | Resources structure
 data Resources =
@@ -41,28 +78,6 @@ data Resources =
     , resRandPosGen :: IO Position
     , resRandVelGen :: IO Velocity
     }
-
-
--- | Reader monad for IO with Resources
-type WithResources a = ReaderT Resources IO a
-type EffectsWithResources = WithResources ()
-
-
--- | asks wrappers
-askForRenderer :: WithResources SDL.Renderer
-askForRenderer = asks resRenderer
-
-askForTextures :: WithResources Textures
-askForTextures = asks resTextures
-
-askForTexts :: WithResources Texts
-askForTexts = asks resTexts
-
-askForRandPos :: WithResources Position
-askForRandPos = asks resRandPosGen >>= liftIO
-
-askForRandVel :: WithResources Velocity
-askForRandVel = asks resRandVelGen >>= liftIO
 
 
 -- | load/initialize all resources
@@ -93,17 +108,14 @@ loadResources renderer = do
                 randomVelocityGen
 
 
--- | runReader wrapper
-runWithResources :: Resources -> EffectsWithResources -> IO ()
-runWithResources = flip runReaderT
-
 
 -- * Types of resources and their load functions
 
 -- | collection type for all the textures
-type Textures = HashMap.HashMap String SDL.Texture
+type Textures = HashMap.HashMap TextureKey SDL.Texture
+type TextureKey = String
 
-keyPathList :: [(String, FilePath)]
+keyPathList :: [(TextureKey, FilePath)]
 keyPathList =
     [ ("Ship", "resources/ship.png")
     , ("Small", "resources/asteroid.png")
@@ -115,23 +127,25 @@ loadTextures :: SDL.Renderer -> IO Textures
 loadTextures renderer = ioOrDie "Failed to load a texture" $
     HashMap.fromList <$> mapM mapPathToTexture keyPathList
     where
-        mapPathToTexture :: (String, FilePath) -> IO (String, SDL.Texture)
+        mapPathToTexture :: (TextureKey, FilePath) -> IO (TextureKey, SDL.Texture)
         mapPathToTexture = mapM (IMG.loadTexture renderer)
 
 
 -- collection type for all the rendered texts
-type Texts = HashMap.HashMap TextTexture SDL.Texture
+type Texts = HashMap.HashMap TextKey SDL.Texture
 
-data TextTexture = TextPaused | TextPressEscape
+data TextKey
+    = TextPaused
+    | TextPressEscape
     deriving (Eq, Generic, Show)
-instance Hashable TextTexture
+instance Hashable TextKey
 
 
 data FontSize = SmallFont | BigFont
     deriving (Eq, Generic, Show)
 instance Hashable FontSize
 
--- keySizeTextList :: [(TextTexture, (FontSize, text-1.2.4.1:Data.Text.Internal.Text))]
+-- keySizeTextList :: [(TextKey, (FontSize, text-1.2.4.1:Data.Text.Internal.Text))]
 keySizedTextList =
     [ (TextPaused, (BigFont, "PAUSED"))
     , (TextPressEscape, (SmallFont, "Press ESCAPE or SPACE to unpause"))

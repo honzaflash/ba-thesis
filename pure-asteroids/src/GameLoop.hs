@@ -95,7 +95,6 @@ gameLoop r texts rand prevTime deltaTime loopState prevInput wEvents oldW = do
             let elapsedTime = currentTime - prevTime
             let delay = max 0 $ targetTime - elapsedTime
             SDL.delay $ fromIntegral delay
-            -- putStr $ printf "%d/%d " elapsedTime delay -- show ticks
             pure $ elapsedTime + delay
 
         isQuitGame QuitGame = True

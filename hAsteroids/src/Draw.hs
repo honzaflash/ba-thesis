@@ -1,60 +1,68 @@
 module Draw where
 
+
 import Components
 import Resources
+import SdlWrappers
 import Utility
 
 import Apecs
 import qualified SDL
-import Control.Monad.IO.Class (liftIO)
 import Data.HashMap.Internal.Strict ((!))
 import Linear
 import Foreign.C.Types (CDouble, CInt)
 
 
-drawScene :: SDL.Renderer -> Textures -> System' ()
-drawScene renderer textures = do
 
-    liftIO $ SDL.copy renderer (textures ! "Background") Nothing Nothing
-    cmapM_ $ \(Ship a, Position pos) -> drawShip pos a
-    cmapM_ $ \(Bullet _, Position pos, Velocity v) -> drawBullet pos v
-    cmapM_ $ \(Asteroid size, Position pos) -> drawAsteroid pos size
+-- TODO  GameLoopState ->
+drawScene :: SystemWithResources ()
+drawScene = do 
+    lift clearRenderer
+    drawWorld
+    lift presentRenderer
 
-    where
-        drawShip position a = liftIO $
-            render "Ship" (position + V2 (-50) (-30), V2 100 60) $ Just $ a / pi * 180
+
+drawWorld :: SystemWithResources ()
+drawWorld = do
+    textures <- askForTextures
+    drawBackground
+    drawShip
+    drawBullets
+    drawAsteroids
+
+
+drawShip :: SystemWithResources ()
+drawShip =
+    cmapM_ $ \(Ship a, Position pos) -> lift $
+        copyExWR "Ship" pos (V2 30 60) $ a / pi * 180
         
-        drawBullet position velocity = liftIO $
-            render "Bullet" (position + V2 (-15) (-15), V2 30 30) $ Just $ unangle velocity / pi * 180
 
-        drawAsteroid position size = liftIO $
-            render "Small" (fmap (subtract (fromIntegral size / 2)) position, pure size) Nothing
-
-        render :: String -> (V2 CDouble, V2 CInt) -> Maybe CDouble -> IO ()
-        render textureKey (position, size) Nothing =
-            SDL.copy   renderer
-                       (textures ! textureKey)
-                       Nothing 
-                       (Just $ SDL.Rectangle (SDL.P $ fmap round position) size)
-
-        render textureKey (position, size) (Just angle) =
-            SDL.copyEx renderer
-                       (textures ! textureKey)
-                       Nothing
-                       (Just $ SDL.Rectangle (SDL.P $ fmap round position) size)
-                       angle
-                       Nothing $
-                       pure False
+drawBullets :: SystemWithResources ()
+drawBullets =
+    cmapM_ $ \(Bullet _, Position pos, Velocity vel) -> lift $
+        copyExWR "Bullet" pos (V2 10 20) $ unangle vel / pi * 180
 
 
-drawMenu :: SDL.Renderer -> Texts -> IO ()
-drawMenu renderer texts = do
+drawAsteroids :: SystemWithResources ()
+drawAsteroids =
+    cmapM_ $ \(Asteroid size, Position pos) -> lift $
+        copyWR "Small" pos $ pure size
 
-    drawText texts 0 TextPaused
-    drawText texts 100 TextPressEscape
+
+drawBackground :: SystemWithResources ()
+drawBackground = lift $ copyWRMaybeRect "Background" Nothing
+
+
+drawMenu :: SystemWithResources ()
+drawMenu = do
+    renderer <- askForRenderer
+    texts <- askForTexts
+
+    drawText renderer texts 0 TextPaused
+    drawText renderer texts 100 TextPressEscape
 
     where
-        drawText texts relY key = do
+        drawText renderer texts relY key = do
             let texture = texts ! key
             info <- SDL.queryTexture texture
             let w = SDL.textureWidth info

@@ -1,44 +1,46 @@
-module GameLoop ( gameLoop ) where
+module GameLoop
+( gameLoop
+) where
+
 
 import Input ( reactToInput )
 import Step ( stepScene )
-import Resources ( Textures )
+import Resources ( Textures, Texts, SystemWithResources )
 import Draw ( drawScene )
 import Components
 import Utility
 
 import qualified SDL
-import Apecs ( runWith )
+import Apecs ( lift )
 import Control.Monad ( unless )
 
 
 
-gameLoop :: SDL.Renderer -> (Textures, IO Position, IO Velocity, World) -> IO ()
-gameLoop renderer resources@(textures, randomPosition, randomVelocity, world) = do
-    iterationStart <- fromIntegral <$> SDL.ticks
-
+-- gameLoop :: (SDL.Renderer, Textures, Texts, IO Position, IO Velocity) -> Time -> World -> IO ()
+gameLoop :: Time -> SystemWithResources ()
+gameLoop prevTime = do
+    
     -- get input
     events <- map SDL.eventPayload <$> SDL.pollEvents
 
-    SDL.clear renderer
-
     -- run systems
-    runWith world $ do
-        reactToInput events
-        stepScene randomPosition randomVelocity
-        drawScene renderer textures
+    reactToInput events
+    stepScene
+    drawScene
 
-    -- wait if frame was redered too quickly
-    iterationTime <- subtract iterationStart . fromIntegral <$> SDL.ticks
-    if iterationTime > targetIterationTime
-        then putStrLn $ "frame 2 slowww " ++ show iterationTime
-        else pure ()
-    SDL.delay $ fromIntegral $ max 0 $ targetIterationTime - iterationTime
-    
-    SDL.present renderer
+    -- FPS management
+    currentTime <- fromIntegral <$> SDL.ticks
+    deltaTime <- lockFps targetDeltaTime currentTime
 
     let quit = any (keyIsPressed SDL.KeycodeEscape) events
     unless quit $
-        gameLoop renderer resources
+        gameLoop deltaTime
 
+    where
+        -- locking fps
+        lockFps targetTime currentTime = do
+            let elapsedTime = currentTime - prevTime
+            let delay = max 0 $ targetTime - elapsedTime
+            SDL.delay $ fromIntegral delay
+            pure $ elapsedTime + delay
 

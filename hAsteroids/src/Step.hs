@@ -3,7 +3,9 @@
 
 module Step where
 
+
 import Components
+import Resources
 import Utility
 
 import Apecs
@@ -12,13 +14,14 @@ import Foreign.C.Types (CDouble)
 import Control.Monad (void)
 
 
-stepScene :: IO Position -> IO Velocity -> System' ()
-stepScene randomPosition randomVelocity = do
+
+stepScene :: SystemWithResources ()
+stepScene = do
     cmap stepKinetics
     cmap decelerateShip
     cmapM_ collisions
     cmapM ageBullets
-    spawnNewAsteroids randomPosition randomVelocity
+    spawnNewAsteroids
 
 
 stepKinetics :: Kinetic -> Position
@@ -31,10 +34,12 @@ stepKinetics (Position p, Velocity v) = Position $ wrap $ p + v
           | a > m + 50 = a - m - 100
           | otherwise  = a
 
+
 decelerateShip :: (Ship, Velocity) -> Velocity
 decelerateShip (_, Velocity v) = Velocity $ v ^* 0.965
 
-collisions :: (Asteroid, Position, Entity) -> System' ()
+
+collisions :: (Asteroid, Position, Entity) -> SystemWithResources ()
 collisions (Asteroid size, Position aPos, aEty) = do
     cmapM_ $ \(Bullet _, Position bPos, bEty :: Entity) ->
                 if distance aPos bPos < fromIntegral size / 2
@@ -53,18 +58,22 @@ collisions (Asteroid size, Position aPos, aEty) = do
                            liftIO $ putStrLn "Score: 0"
                     else pure ()
 
-ageBullets :: Bullet -> System' (Maybe Bullet)
+
+-- | decrement bullet's TTL and delete it if it's less than 1
+ageBullets :: Bullet -> SystemWithResources (Maybe Bullet)
 ageBullets (Bullet age) = pure $
     if age > 0 then Just $ Bullet (age - 1) else Nothing
 
-spawnNewAsteroids :: IO Position -> IO Velocity -> System' ()
-spawnNewAsteroids randomPosition randomVelocity = do
+
+spawnNewAsteroids :: SystemWithResources ()
+spawnNewAsteroids = do
+    randomPosition <- askForRandPosGen
     ran <- liftIO randomPosition
     let (Position (V2 x y)) = ran
     if x * y < 400
         then do
                pos <- liftIO randomPosition
-               vel <- liftIO randomVelocity
+               vel <- askForRandVel
                void $ newEntity (Asteroid 80, pos, vel)
         else pure ()
 

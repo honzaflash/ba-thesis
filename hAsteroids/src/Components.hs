@@ -10,12 +10,17 @@
 
 module Components where
 
+
 import Apecs
 import Linear ( V2 )
-import Foreign.C.Types (CDouble, CInt)
+import Foreign.C.Types ( CDouble, CInt )
 
-newtype Ship = Ship { getRotation :: CDouble } deriving Show
+
+
+newtype Ship = Ship { getRotation :: Angle } deriving Show
 instance Component Ship where type Storage Ship = Unique Ship
+
+type Angle = CDouble
 
 newtype Asteroid = Asteroid { getSize :: CInt } deriving Show
 instance Component Asteroid where type Storage Asteroid = Map Asteroid
@@ -36,10 +41,28 @@ instance Semigroup Score where (<>) = (+)
 instance Monoid Score where mempty = 0
 instance Component Score where type Storage Score = Global Score
 
-data CurrentSceneType = SceneIsGame | SceneIsMenu deriving Show
-instance Semigroup CurrentSceneType where (<>) = const
-instance Monoid CurrentSceneType where mempty = SceneIsMenu
-instance Component CurrentSceneType where type Storage CurrentSceneType = Global CurrentSceneType
+newtype WorldTime = WorldTime Int deriving (Show, Num)
+instance Semigroup WorldTime where (<>) = (+)
+instance Monoid WorldTime where mempty = 0
+instance Component WorldTime where type Storage WorldTime = Global WorldTime
+
+data GameLoopState
+    = Playing ShipState
+    | Paused
+    | GameOver
+    | InMenu
+    | Quit
+    deriving Show
+instance Semigroup GameLoopState where (<>) = const
+instance Monoid GameLoopState where mempty = InMenu
+instance Component GameLoopState where type Storage GameLoopState = Global GameLoopState
+
+data ShipState
+    = Alive
+    | Exploding
+    | Respawning
+    deriving Show
+
 
 makeWorld "World" [ ''Ship
                   , ''Asteroid
@@ -47,9 +70,8 @@ makeWorld "World" [ ''Ship
                   , ''Position
                   , ''Velocity
                   , ''Score
-                  , ''CurrentSceneType
+                  , ''WorldTime
+                  , ''GameLoopState
                   ]
-
-type System' a = System World a
 
 

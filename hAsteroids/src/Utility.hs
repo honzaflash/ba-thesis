@@ -3,28 +3,35 @@ module Utility where
 
 import Components
 
-import Linear
+import qualified SDL
+import Foreign.C.Types (CDouble, CInt (CInt))
+import Control.Monad
 import Control.Exception
 import System.IO ( stderr, hPrint )
 import System.Exit ( die ) 
-import Foreign.C.Types (CDouble, CInt (CInt))
 import System.Random.Stateful
 import Data.List
-import Control.Monad
-import qualified SDL
+import Linear
 
 
-{- Global static variables -}
+-- * Types
+
+type Time = Int 
+
+
+-- * Global static variables
 
 windowWidth, windowHeight :: CInt
 windowWidth = 1024
 windowHeight = 768
 
+targetFPS, targetDeltaTime :: Integral a => a
 targetFPS = 60
-targetIterationTime = 1000 `div` targetFPS
+targetDeltaTime = 1000 `div` targetFPS
 
 
-{- Helper functions -}
+
+-- * Helper functions
 
 -- cap velocity to max speed
 capVelocity :: CDouble -> Velocity -> Velocity
@@ -40,7 +47,7 @@ keyIsPressed keycode (SDL.KeyboardEvent event) =
 keyIsPressed _ _ = False 
 
 
-{- stateful random generator initializers -}
+-- * stateful random generator initializers
 
 -- initialize a random number generator
 initStatefulRanGen :: UniformRange a => Int -> a -> a -> IO (IO a)
@@ -70,7 +77,7 @@ initRandomVelocityGenerator seed1 seed2 =
             initV2generator seed1 seed2 (-5, 5) (-5, 5)
 
 
-{- IO Exception handlers -}
+-- * IO Exception handlers
 
 -- handle every nonfatal exception
 ioOrDefault :: a -> IO a -> IO a
