@@ -1,13 +1,21 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveGeneric #-}
-module Resources
-    ( loadTextures
-    , Textures
-    , loadTexts
-    , Texts
-    , TextTexture(..)
-    ) where
 
+module Resources
+( loadResources
+, runWithResources
+  -- TODO freeResources
+, Resources
+, WithResources
+, EffectsWithResources
+, Textures
+, Texts
+, TextTexture(..)
+) where
+
+
+import Components ( Velocity, Position )
 import Utility
 
 import qualified SDL
@@ -15,13 +23,84 @@ import qualified SDL.Image as IMG
 import qualified SDL.Font as FNT
 import qualified Data.HashMap.Internal.Strict as HashMap
 import Data.HashMap.Internal.Strict ((!))
-import Linear
 import GHC.Generics ( Generic )
 import Data.Hashable
+import Control.Monad.Reader
+import Linear
 
 
 
--- collection type for all the textures
+-- * Reader monad for resources and accompaning getters
+
+-- | Resources structure
+data Resources =
+    Resources
+    { resRenderer   :: SDL.Renderer
+    , resTextures   :: Textures
+    , resTexts      :: Texts
+    , resRandPosGen :: IO Position
+    , resRandVelGen :: IO Velocity
+    }
+
+
+-- | Reader monad for IO with Resources
+type WithResources a = ReaderT Resources IO a
+type EffectsWithResources = WithResources ()
+
+
+-- | asks wrappers
+askForRenderer :: WithResources SDL.Renderer
+askForRenderer = asks resRenderer
+
+askForTextures :: WithResources Textures
+askForTextures = asks resTextures
+
+askForTexts :: WithResources Texts
+askForTexts = asks resTexts
+
+askForRandPos :: WithResources Position
+askForRandPos = asks resRandPosGen >>= liftIO
+
+askForRandVel :: WithResources Velocity
+askForRandVel = asks resRandVelGen >>= liftIO
+
+
+-- | load/initialize all resources
+loadResources :: SDL.Renderer -> IO Resources
+loadResources renderer = do
+    -- initialize random generators
+    time <- round <$> SDL.time
+    randGen :: IO Int <- initStatefulRanGen time 0 99999
+    [seed1, seed2, seed3, seed4] <- replicateM 4 randGen
+
+    randomPositionGen <-
+        initRandomPositionGenerator seed1 seed2
+    randomVelocityGen <-
+        initRandomVelocityGenerator seed3 seed4
+
+    -- initialize textures
+    textureMap <- loadTextures renderer
+
+    -- initialize text textures
+    textMap <- loadTexts renderer
+
+    -- wrap it up into Resources
+    pure $ Resources
+                renderer
+                textureMap
+                textMap
+                randomPositionGen
+                randomVelocityGen
+
+
+-- | runReader wrapper
+runWithResources :: Resources -> EffectsWithResources -> IO ()
+runWithResources = flip runReaderT
+
+
+-- * Types of resources and their load functions
+
+-- | collection type for all the textures
 type Textures = HashMap.HashMap String SDL.Texture
 
 keyPathList :: [(String, FilePath)]
@@ -76,3 +155,4 @@ loadTexts renderer = do
         sizeAndStringToTexture fonts (fontSize, string) = do
             surface <- FNT.solid (fonts ! fontSize) (V4 255 255 255 255) string
             SDL.createTextureFromSurface renderer surface
+

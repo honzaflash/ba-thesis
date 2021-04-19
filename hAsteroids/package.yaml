@@ -29,6 +29,7 @@ dependencies:
 - unordered-containers
 - linear
 - lens
+- mtl
 - hashable
 
 library:
