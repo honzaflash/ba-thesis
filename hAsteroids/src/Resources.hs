@@ -24,13 +24,14 @@ import Utility
 import qualified SDL
 import qualified SDL.Image as IMG
 import qualified SDL.Font as FNT
-import qualified Data.HashMap.Internal.Strict as HashMap
+import qualified Data.HashMap.Internal.Strict as HM
 import Data.HashMap.Internal.Strict ((!))
 import GHC.Generics ( Generic )
-import Data.Hashable
+import Data.Hashable ( Hashable )
+import Data.Maybe ( mapMaybe )
+import qualified Data.String
 import Control.Monad.Reader
-import Linear
-import Apecs
+import Apecs ( SystemT )
 
 
 
@@ -112,9 +113,18 @@ loadResources renderer = do
 -- * Types of resources and their load functions
 
 -- | collection type for all the textures
-type Textures = HashMap.HashMap TextureKey SDL.Texture
+type Textures = HM.HashMap TextureKey SDL.Texture
 type TextureKey = String
 
+
+loadTextures :: SDL.Renderer -> IO Textures
+loadTextures renderer = ioOrDie "Failed to load a texture" $
+    HM.fromList <$> mapM mapPathToTexture keyPathList
+    where
+        mapPathToTexture :: (TextureKey, FilePath) -> IO (TextureKey, SDL.Texture)
+        mapPathToTexture = mapM (IMG.loadTexture renderer)
+
+        
 keyPathList :: [(TextureKey, FilePath)]
 keyPathList =
     [ ("Ship", "resources/ship.png")
@@ -123,50 +133,98 @@ keyPathList =
     , ("Background", "resources/space-background.png")
     ]
 
-loadTextures :: SDL.Renderer -> IO Textures
-loadTextures renderer = ioOrDie "Failed to load a texture" $
-    HashMap.fromList <$> mapM mapPathToTexture keyPathList
-    where
-        mapPathToTexture :: (TextureKey, FilePath) -> IO (TextureKey, SDL.Texture)
-        mapPathToTexture = mapM (IMG.loadTexture renderer)
-
 
 -- collection type for all the rendered texts
-type Texts = HashMap.HashMap TextKey SDL.Texture
+type Texts = HM.HashMap TextKey SDL.Texture
 
 data TextKey
     = TextPaused
-    | TextPressEscape
+    | TextPressSpaceToUnpause
+    | TextPressEscapeToExitToMainMenu
+    | TextMainMenu
+    | TextPressSpaceToStartNewGame
+    | TextPressEscapeToQuit
+    | TextGameOver
+    | TextPressSpaceToContinue
+    | TextNumber0
+    | TextNumber1
+    | TextNumber2
+    | TextNumber3
+    | TextNumber4
+    | TextNumber5
+    | TextNumber6
+    | TextNumber7
+    | TextNumber8
+    | TextNumber9
     deriving (Eq, Generic, Show)
 instance Hashable TextKey
 
+strNumToTextKey :: Char -> Maybe TextKey
+strNumToTextKey str =
+    case str of
+        '0' -> Just TextNumber0
+        '1' -> Just TextNumber1
+        '2' -> Just TextNumber2
+        '3' -> Just TextNumber3
+        '4' -> Just TextNumber4
+        '5' -> Just TextNumber5
+        '6' -> Just TextNumber6
+        '7' -> Just TextNumber7
+        '8' -> Just TextNumber8
+        '9' -> Just TextNumber9
+        _   -> Nothing
 
-data FontSize = SmallFont | BigFont
+
+data FontSize = SmallFont | MediumFont | BigFont
     deriving (Eq, Generic, Show)
 instance Hashable FontSize
 
--- keySizeTextList :: [(TextKey, (FontSize, text-1.2.4.1:Data.Text.Internal.Text))]
-keySizedTextList =
-    [ (TextPaused, (BigFont, "PAUSED"))
-    , (TextPressEscape, (SmallFont, "Press ESCAPE or SPACE to unpause"))
-    ]
 
 loadTexts :: SDL.Renderer -> IO Texts
 loadTexts renderer = do
-    let fontsList = 
-            [ (SmallFont, 32)
+    let fontSizes = 
+            [ (SmallFont, 16)
+            , (MediumFont, 32)
             , (BigFont, 64)
             ]
-    fonts <- HashMap.fromList <$>
-                mapM (mapM (FNT.load "resources/computer-speak.ttf")) fontsList
+    fonts <- HM.fromList <$> mapM loadFontFromSize fontSizes
 
-    textTextureList <- mapM (mapSizedTextToTexture fonts) keySizedTextList
-    sequence_ $ HashMap.map FNT.free fonts
-    pure $ HashMap.fromList textTextureList
+    textTextureList <- mapM (mapSizedTextToTexture fonts) keySizeTextList
+    sequence_ $ HM.map FNT.free fonts
+    pure $ HM.fromList textTextureList
 
     where
+        loadFontFromSize = mapM $ FNT.load "resources/computer-speak.ttf"
+
         mapSizedTextToTexture fonts = mapM (sizeAndStringToTexture fonts)
         sizeAndStringToTexture fonts (fontSize, string) = do
-            surface <- FNT.solid (fonts ! fontSize) (V4 255 255 255 255) string
+            surface <- FNT.solid (fonts HM.! fontSize) (SDL.V4 255 255 255 255) string
             SDL.createTextureFromSurface renderer surface
+
+
+keySizeTextList :: Data.String.IsString str => [(TextKey, (FontSize, str))]
+keySizeTextList =
+    [ (TextPaused, (BigFont, "paused"))
+    , (TextPressSpaceToUnpause, (MediumFont, "press space to unpause"))
+    , (TextPressEscapeToExitToMainMenu, (MediumFont, "press escape to exit to main menu"))
+    , (TextMainMenu, (BigFont, "main menu"))
+    , (TextPressSpaceToStartNewGame, (MediumFont, "press space to start new game"))
+    , (TextPressEscapeToQuit, (MediumFont, "press escape to quit"))
+    , (TextGameOver, (BigFont, "game over"))
+    , (TextPressSpaceToContinue, (MediumFont, "press space to continue"))
+    , (TextNumber0, (SmallFont, "0"))
+    , (TextNumber1, (SmallFont, "1"))
+    , (TextNumber2, (SmallFont, "2"))
+    , (TextNumber3, (SmallFont, "3"))
+    , (TextNumber4, (SmallFont, "4"))
+    , (TextNumber5, (SmallFont, "5"))
+    , (TextNumber6, (SmallFont, "6"))
+    , (TextNumber7, (SmallFont, "7"))
+    , (TextNumber8, (SmallFont, "8"))
+    , (TextNumber9, (SmallFont, "9"))
+    ]
+
+
+numToTextKeys :: (Show a, Num a) => a -> [TextKey]
+numToTextKeys = mapMaybe strNumToTextKey . show
 

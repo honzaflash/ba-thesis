@@ -17,11 +17,15 @@ import Control.Monad (void)
 
 stepScene :: Time -> SystemWithResources ()
 stepScene dT = do
-    cmap stepKinetics
-    cmap decelerateShip
-    cmapM_ collisions
-    cmapM ageBullets
-    spawnNewAsteroids
+    loopState <- get global
+    case loopState of
+        Playing -> do
+            cmap stepKinetics
+            cmap decelerateShip
+            cmapM_ collisions
+            cmapM ageBullets
+            spawnNewAsteroids
+        _ -> pure ()
 
 
 stepKinetics :: Kinetic -> Position
