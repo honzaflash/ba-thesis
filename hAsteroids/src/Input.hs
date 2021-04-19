@@ -1,65 +1,128 @@
--- {-# LANGUAGE LambdaCase #-}
-module Input where
+{-# LANGUAGE ScopedTypeVariables #-}
+module Input
+( reactToInput
+) where
 
 
 import Components
 import Resources
+import Utility ( Time )
 
 import Apecs
 import qualified SDL
-import Control.Monad (void)
+import Control.Monad ( void, when )
 import Linear
+import Foreign.C.Types (CDouble)
 
 
-reactToInput :: [SDL.EventPayload] -> SystemWithResources ()
-reactToInput events = do
-    keyboarState <- SDL.getKeyboardState
-    mapM_ (doTrue . fmap keyboarState) actions
 
-    mapM_ handleEvents events
-
-    where
-        actions =
-            [ (turnLeft, SDL.ScancodeA)
-            , (turnRight, SDL.ScancodeD)
-            , (propel,   SDL.ScancodeW)
-            ]
-        doTrue (system, True)  = system
-        doTrue (_,      False) = pure ()
-
-
-handleEvents :: SDL.EventPayload -> SystemWithResources ()
-handleEvents (SDL.KeyboardEvent event) =
-    if SDL.keyboardEventKeyMotion event == SDL.Pressed &&
-        not (SDL.keyboardEventRepeat event)
-        then handleKeypress $
-            SDL.keysymKeycode $
-            SDL.keyboardEventKeysym event
-        else pure ()
-    where
-        -- Define actions taken for each keycode here
-        handleKeypress keycode
-            | keycode == SDL.KeycodeSpace = shoot
-           --  | keycode == SDL.KeycodeEscape = changeSceneType
-            | otherwise = pure ()
-handleEvents _ = pure ()
+reactToInput :: Time -> SystemWithResources ()
+reactToInput dT = do
+    events <- map SDL.eventPayload <$> SDL.pollEvents
+    modify global $ \(inputState :: InputState) ->
+        updateInputState inputState events
+    input <- get global
+    loopState <- get global
+    case loopState of
+        InMenu
+            | wasPressed input spaceKeycode  -> set global Playing
+            | wasPressed input escapeKeycode -> set global Quit
+            | otherwise -> pure ()
+        Paused
+            | wasPressed input spaceKeycode  -> set global Playing
+            | wasPressed input escapeKeycode -> set global InMenu 
+            | otherwise -> pure ()
+        GameOver
+            | wasPressed input spaceKeycode  -> set global InMenu
+            | otherwise -> pure ()
+        Quit -> pure ()
+        Playing ->
+            cmapM $ \(Ship a, Velocity vel, shipState :: ShipState) ->
+                case shipState of
+                    Exploding _ ->
+                        pure ( Ship a, Velocity vel) -- no changes
+                    _ ->
+                        when (wasPressed input escapeKeycode) (set global Paused)
+                        >> when (wasPressed input spaceKeycode) shoot
+                        >> pure
+                            ( Ship $ a + steering dT input
+                            , Velocity $ thrust dT input a . decelerate dT $ vel
+                            )
 
 
 shoot :: SystemWithResources ()
-shoot = cmapM_ $ \(Ship a, Position pos) -> 
-                    void $ newEntity (Bullet 40, Position pos, Velocity $ 15 *^ angle a)
+shoot =
+    cmapM_ $ \(Ship a, Position pos) -> void $
+        newEntity (Bullet 40, Position pos, Velocity $ 15 *^ angle a)
 
-turnLeft :: SystemWithResources ()
-turnLeft = cmap $ \(Ship a) -> Ship $ a - 0.085
 
-turnRight :: SystemWithResources ()
-turnRight = cmap $ \(Ship a) -> Ship $ a + 0.085
+-- | Returns a function to modify velocity vector based on input
+thrust :: Time -> InputState -> Angle -> V2 CDouble -> V2 CDouble
+thrust dT input direction = if isHeldW input 
+                               then (+ thrustStrength *^ angle direction)
+                               else id
+    where thrustStrength = 0.04 * fromIntegral dT
 
-propel :: SystemWithResources ()
-propel = cmap $ \(Ship a, Velocity v) -> Velocity $ v + 0.6 *^ angle a
 
--- changeSceneType :: SystemWithResources ()
--- changeSceneType = modify global $ \case
---                                      SceneIsGame -> SceneIsMenu
---                                      SceneIsMenu -> SceneIsGame
+-- | Constant deceletration over time
+decelerate :: Time -> V2 CDouble -> V2 CDouble
+decelerate dT = ((0.985 ** (fromIntegral dT / 16)) *^)
+
+
+-- | returns delta angle that should be added to the current
+--   ship direction, based on the input
+steering :: Time -> InputState -> Angle
+steering dT input = (if isHeldA input then (-steeringStrength) else 0)
+                    + if isHeldD input then steeringStrength else 0
+    where steeringStrength = 0.0025 * fromIntegral dT
+
+
+-- * Input state updating
+
+-- | Takes SDL.Events and updates the InputSate
+updateInputState :: InputState -> [SDL.EventPayload] -> InputState
+updateInputState state = foldl processEvent resetState
+    where resetState = state
+                       { werePressed = []
+                       , quitEvent = False
+                       }
+
+
+processEvent :: InputState -> SDL.EventPayload -> InputState
+processEvent state (SDL.KeyboardEvent eventData) = registerKey eventData state
+    where
+        registerKey eventData state =
+            case eventData of
+                (SDL.KeyboardEventData _ _        True _  ) -> state
+                (SDL.KeyboardEventData _ SDL.Pressed  _    key) -> press key state
+                (SDL.KeyboardEventData _ SDL.Released _    key) -> release key state
+
+        -- if the key is A/W/D set the flag for being held down to True
+        -- otherwise add the keycode to the list of keys that were pressed
+        press   (SDL.Keysym _ SDL.KeycodeW _) state = state { isHeldW = True }
+        press   (SDL.Keysym _ SDL.KeycodeA _) state = state { isHeldA = True }
+        press   (SDL.Keysym _ SDL.KeycodeD _) state = state { isHeldD = True }
+        press   (SDL.Keysym _ keycode      _) state =
+            state { werePressed = keycode : werePressed state }
+
+        -- undo held down flags if key was released
+        release (SDL.Keysym _ SDL.KeycodeW _) state = state { isHeldW = False }
+        release (SDL.Keysym _ SDL.KeycodeA _) state = state { isHeldA = False }
+        release (SDL.Keysym _ SDL.KeycodeD _) state = state { isHeldD = False }
+        release _ state = state
+processEvent state  SDL.QuitEvent = state { quitEvent = True }
+processEvent state  _             = state
+
+
+-- * Helpers
+
+-- | helper wrapper
+spaceKeycode, escapeKeycode :: SDL.Keycode
+spaceKeycode = SDL.KeycodeSpace
+escapeKeycode = SDL.KeycodeEscape
+
+
+-- | Helper for querying InputState on one time presses  
+wasPressed :: InputState -> SDL.Keycode -> Bool
+wasPressed st k = k `elem` werePressed st
 

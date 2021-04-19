@@ -15,8 +15,8 @@ import Control.Monad (void)
 
 
 
-stepScene :: SystemWithResources ()
-stepScene = do
+stepScene :: Time -> SystemWithResources ()
+stepScene dT = do
     cmap stepKinetics
     cmap decelerateShip
     cmapM_ collisions

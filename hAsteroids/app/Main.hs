@@ -48,7 +48,7 @@ main = do
     world <- initializeWorld
 
     -- run the game loop
-    runWithResources resources $ runWith world $ gameLoop 0
+    runWithResources resources $ runWith world $ gameLoop 0 0
 
     -- quit
     -- TODO freeResources

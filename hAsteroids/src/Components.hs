@@ -14,6 +14,7 @@ module Components where
 import Apecs
 import Linear ( V2 )
 import Foreign.C.Types ( CDouble, CInt )
+import qualified SDL.Input as SDL
 
 
 
@@ -22,11 +23,14 @@ instance Component Ship where type Storage Ship = Unique Ship
 
 type Angle = CDouble
 
+
 newtype Asteroid = Asteroid { getSize :: CInt } deriving Show
 instance Component Asteroid where type Storage Asteroid = Map Asteroid
 
+
 newtype Bullet = Bullet { getTTL :: Int } deriving Show
 instance Component Bullet where type Storage Bullet = Map Bullet
+
 
 newtype Position = Position (V2 CDouble) deriving Show
 instance Component Position where type Storage Position = Map Position
@@ -36,18 +40,21 @@ instance Component Velocity where type Storage Velocity = Map Velocity
 
 type Kinetic = (Position, Velocity)
 
+
 newtype Score = Score Int deriving (Show, Num)
 instance Semigroup Score where (<>) = (+)
 instance Monoid Score where mempty = 0
 instance Component Score where type Storage Score = Global Score
+
 
 newtype WorldTime = WorldTime Int deriving (Show, Num)
 instance Semigroup WorldTime where (<>) = (+)
 instance Monoid WorldTime where mempty = 0
 instance Component WorldTime where type Storage WorldTime = Global WorldTime
 
+
 data GameLoopState
-    = Playing ShipState
+    = Playing
     | Paused
     | GameOver
     | InMenu
@@ -57,11 +64,33 @@ instance Semigroup GameLoopState where (<>) = const
 instance Monoid GameLoopState where mempty = InMenu
 instance Component GameLoopState where type Storage GameLoopState = Global GameLoopState
 
+
 data ShipState
     = Alive
-    | Exploding
-    | Respawning
+    | Exploding Int
+    | Respawning Int
     deriving Show
+instance Semigroup ShipState where (<>) = const
+instance Monoid ShipState where mempty = Alive
+instance Component ShipState where type Storage ShipState = Global ShipState
+
+
+data InputState =
+    InputState
+    { isHeldW     :: Bool
+    , isHeldA     :: Bool
+    , isHeldD     :: Bool
+    , werePressed :: [SDL.Keycode]
+    , quitEvent   :: Bool
+    }
+    deriving Show
+
+instance Semigroup InputState where
+    InputState w1 a1 d1 other1 quit1 <> InputState w2 a2 d2 other2 quit2 =
+        InputState w2 a2 d2 (other1 <> other2) (quit1 || quit2)
+instance Monoid InputState where
+    mempty = InputState False False False [] False
+instance Component InputState where type Storage InputState = Global InputState
 
 
 makeWorld "World" [ ''Ship
@@ -72,6 +101,8 @@ makeWorld "World" [ ''Ship
                   , ''Score
                   , ''WorldTime
                   , ''GameLoopState
+                  , ''ShipState
+                  , ''InputState
                   ]
 
 
