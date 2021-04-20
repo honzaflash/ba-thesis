@@ -28,13 +28,13 @@ gameLoop prevTime deltaTime = do
 
     -- FPS management
     currentTime <- fromIntegral <$> SDL.ticks
-    newDeltaTime <- lockFps targetDeltaTime currentTime
+    (elapsedTime, delay) <- lockFps targetDeltaTime currentTime
 
     state :: GameLoopState <- get global
     let quit = case state of
                     Quit -> True 
                     _    -> False
-    unless quit $ gameLoop currentTime newDeltaTime
+    unless quit $ gameLoop (currentTime + delay) (min 64 $ elapsedTime + delay)
 
     where
         -- locking fps
@@ -42,5 +42,5 @@ gameLoop prevTime deltaTime = do
             let elapsedTime = currentTime - prevTime
             let delay = max 0 $ targetTime - elapsedTime
             SDL.delay $ fromIntegral delay
-            pure $ elapsedTime + delay
+            pure (elapsedTime, delay)
 

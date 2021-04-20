@@ -20,27 +20,31 @@ stepScene dT = do
     loopState <- get global
     case loopState of
         Playing -> do
-            cmap stepKinetics
-            cmap decelerateShip
+            cmap $ decelerateShip dT
+            cmap $ stepKinetics dT
             cmapM_ collisions
             cmapM ageBullets
             spawnNewAsteroids
         _ -> pure ()
 
 
-stepKinetics :: Kinetic -> Position
-stepKinetics (Position p, Velocity v) = Position $ wrap $ p + v
+stepKinetics :: Time -> Kinetic -> Position
+stepKinetics dT (Position p, Velocity v) =
+    Position $ wrap $ p + v ^* fromIntegral dT / 100
     where
         wrap :: V2 CDouble -> V2 CDouble
-        wrap (V2 x y) = V2 (x `wrapAxis` fromIntegral windowWidth) (y `wrapAxis` fromIntegral windowHeight)
+        wrap (V2 x y) = V2
+                          (x `wrapAxis` fromIntegral windowWidth)
+                          (y `wrapAxis` fromIntegral windowHeight)
         wrapAxis a m
           | a < (-50)  = a + m + 100
           | a > m + 50 = a - m - 100
           | otherwise  = a
 
 
-decelerateShip :: (Ship, Velocity) -> Velocity
-decelerateShip (_, Velocity v) = Velocity $ v ^* 0.965
+decelerateShip :: Time -> (Ship, Velocity) -> Velocity
+decelerateShip dT (_, Velocity v) =
+    Velocity $ v ^* (0.975 ** (fromIntegral dT / fromIntegral targetDeltaTime))
 
 
 collisions :: (Asteroid, Position, Entity) -> SystemWithResources ()

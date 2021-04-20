@@ -71,10 +71,14 @@ initRandomPositionGenerator seed1 seed2 =
                             (0, fromIntegral windowWidth)
                             (0, fromIntegral windowHeight)
 
+
+-- | returns velocity vector with magnitude between 3 and 6
 initRandomVelocityGenerator :: Int -> Int -> IO (IO Velocity)
 initRandomVelocityGenerator seed1 seed2 =
     fmap Velocity <$>
             initV2generator seed1 seed2 (-5, 5) (-5, 5)
+    where
+        addLength vect = vect + 3 *^ signorm vect
 
 
 -- * IO Exception handlers

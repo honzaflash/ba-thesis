@@ -46,14 +46,14 @@ reactToInput dT = do
                         >> when (wasPressed input spaceKeycode) shoot
                         >> pure
                             ( Ship $ a + steering dT input
-                            , Velocity $ thrust dT input a . decelerate dT $ vel
+                            , Velocity $ thrust dT input a vel
                             )
 
 
 shoot :: SystemWithResources ()
 shoot =
     cmapM_ $ \(Ship a, Position pos) -> void $
-        newEntity (Bullet 40, Position pos, Velocity $ 15 *^ angle a)
+        newEntity (Bullet 40, Position pos, Velocity $ 100 *^ angle a)
 
 
 -- | Returns a function to modify velocity vector based on input
@@ -61,12 +61,7 @@ thrust :: Time -> InputState -> Angle -> V2 CDouble -> V2 CDouble
 thrust dT input direction = if isHeldW input 
                                then (+ thrustStrength *^ angle direction)
                                else id
-    where thrustStrength = 0.04 * fromIntegral dT
-
-
--- | Constant deceletration over time
-decelerate :: Time -> V2 CDouble -> V2 CDouble
-decelerate dT = ((0.985 ** (fromIntegral dT / 16)) *^)
+    where thrustStrength = 0.12 * fromIntegral dT
 
 
 -- | returns delta angle that should be added to the current
@@ -74,7 +69,7 @@ decelerate dT = ((0.985 ** (fromIntegral dT / 16)) *^)
 steering :: Time -> InputState -> Angle
 steering dT input = (if isHeldA input then (-steeringStrength) else 0)
                     + if isHeldD input then steeringStrength else 0
-    where steeringStrength = 0.0025 * fromIntegral dT
+    where steeringStrength = 0.0045 * fromIntegral dT
 
 
 -- * Input state updating
