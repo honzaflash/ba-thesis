@@ -21,33 +21,33 @@ reactToInput dT = do
     events <- map SDL.eventPayload <$> SDL.pollEvents
     modify global $ \(inputState :: InputState) ->
         updateInputState inputState events
-    input <- get global
-    loopState <- get global
-    case loopState of
-        InMenu
+    
+    (input, loopState, shipState) <- get global
+    case (loopState, shipState) of
+        (InMenu, _)
             | wasPressed input spaceKeycode  -> set global Playing
             | wasPressed input escapeKeycode -> set global Quit
             | otherwise -> pure ()
-        Paused
+        (Paused, _)
             | wasPressed input spaceKeycode  -> set global Playing
             | wasPressed input escapeKeycode -> set global InMenu 
             | otherwise -> pure ()
-        GameOver
+        (GameOver, _)
             | wasPressed input spaceKeycode  -> set global InMenu
             | otherwise -> pure ()
-        Quit -> pure ()
-        Playing ->
-            cmapM $ \(Ship a, Velocity vel, shipState :: ShipState) ->
-                case shipState of
-                    Exploding _ ->
-                        pure ( Ship a, Velocity vel) -- no changes
-                    _ ->
-                        when (wasPressed input escapeKeycode) (set global Paused)
-                        >> when (wasPressed input spaceKeycode) shoot
-                        >> pure
-                            ( Ship $ a + steering dT input
-                            , Velocity $ thrust dT input a vel
-                            )
+        (Quit, _) -> pure ()
+        (Playing, Exploding _)
+            | wasPressed input escapeKeycode -> set global Paused
+            | otherwise -> pure ()
+        -- Playing and ship is Alive or Respawning
+        (Playing, _) ->
+            cmapM $ \(Ship a, Velocity vel) ->
+                when (wasPressed input escapeKeycode) (set global Paused)
+                >> when (wasPressed input spaceKeycode) shoot
+                >> pure
+                    ( Ship $ a + steering dT input
+                    , Velocity $ thrust dT input a vel
+                    )
 
 
 shoot :: SystemWithResources ()

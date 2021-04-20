@@ -21,9 +21,13 @@ type Time = Int
 
 -- * Global static variables
 
-windowWidth, windowHeight :: CInt
+windowWidth, windowHeight :: Integral a => a
 windowWidth = 1024
 windowHeight = 768
+
+windowWidthF, windowHeightF :: Floating a => a
+windowWidthF = fromIntegral windowWidth
+windowHeightF = fromIntegral windowHeight
 
 targetFPS, targetDeltaTime :: Integral a => a
 targetFPS = 60

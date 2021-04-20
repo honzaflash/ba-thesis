@@ -11,7 +11,7 @@ import Utility
 import Apecs
 import Linear
 import Foreign.C.Types (CDouble)
-import Control.Monad (void)
+import Control.Monad ( void, when )
 
 
 
@@ -20,8 +20,9 @@ stepScene dT = do
     loopState <- get global
     case loopState of
         Playing -> do
+            cmap $ stepKinetics dT -- moving everything that has velocity and position
             cmap $ decelerateShip dT
-            cmap $ stepKinetics dT
+            cmapM $ stepShipState dT
             cmapM_ collisions
             cmapM ageBullets
             spawnNewAsteroids
@@ -50,21 +51,36 @@ decelerateShip dT (_, Velocity v) =
 collisions :: (Asteroid, Position, Entity) -> SystemWithResources ()
 collisions (Asteroid size, Position aPos, aEty) = do
     cmapM_ $ \(Bullet _, Position bPos, bEty :: Entity) ->
-                if distance aPos bPos < fromIntegral size / 2
-                    then do
-                           destroy bEty $ Proxy @(Bullet, Kinetic)
-                           destroy aEty $ Proxy @(Asteroid, Kinetic)
-                           modify global $ \(Score s) -> Score $ s + 100
-                           (Score s) <- get global
-                           liftIO $ putStrLn $ "Score: " ++ show s
-                    else pure ()
-    cmapM $ \(Ship _, Position sPos) ->
-                if distance aPos sPos < 50 + fromIntegral size / 2
-                    then do
-                           destroy aEty $ Proxy @(Asteroid, Kinetic)
-                           modify global $ \(Score _) -> Score 0
-                           liftIO $ putStrLn "Score: 0"
-                    else pure ()
+                when (distance aPos bPos < fromIntegral size / 2) $
+                    do
+                        destroy bEty $ Proxy @(Bullet, Kinetic)
+                        destroy aEty $ Proxy @(Asteroid, Kinetic)
+                        modify global $ \(Score s) -> Score $ s + 100
+                        (Score s) <- get global
+                        liftIO $ putStrLn $ "Score: " ++ show s
+    cmapM_ $ \(Ship _, Position sPos, Velocity vel, sEty :: Entity, state :: ShipState) ->
+                when (state == Alive && distance aPos sPos < 50 + fromIntegral size / 2) $
+                    do
+                        destroy aEty $ Proxy @(Asteroid, Kinetic)
+                        modify global $ \(ShipLives x) ->
+                            (ShipLives $ x - 1, Exploding 700)
+                        set sEty (Velocity $ V2 0 0)
+                        modify global $ \(ShipLives x) ->
+                            if x == 0 then GameOver else Playing
+                        liftIO $ putStrLn "Score: 0"
+
+
+-- | update the ship state and modify ship components along the way
+stepShipState :: Time -> (Ship, Entity, ShipState) -> SystemWithResources (Ship, ShipState)
+stepShipState dT (Ship a, sEty, Exploding t)
+    | t > 0     = pure (Ship $ a + 0.03 * fromIntegral dT, Exploding $ t - dT)
+    | otherwise = do
+        set sEty $ Position $ V2 (windowWidthF /2) (windowHeightF / 2)
+        pure (Ship $ pi * 3 / 2, Respawning 1500)
+stepShipState dT (Ship a, _, Respawning t)
+    | t > 0     = pure (Ship a, Respawning $ t - dT)
+    | otherwise = pure (Ship a, Alive)
+stepShipState dT (Ship a, _, Alive) = pure (Ship a, Alive)
 
 
 -- | decrement bullet's TTL and delete it if it's less than 1
