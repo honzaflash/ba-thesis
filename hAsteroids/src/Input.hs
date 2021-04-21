@@ -6,13 +6,13 @@ module Input
 
 import Components
 import Resources
-import Utility ( Time )
+import Utility ( Time, bulletSpeed, initBulletTtl )
 
 import Apecs
 import qualified SDL
 import Control.Monad ( void, when )
 import Linear
-import Foreign.C.Types (CDouble)
+import Foreign.C.Types ( CDouble )
 
 
 
@@ -53,7 +53,11 @@ reactToInput dT = do
 shoot :: SystemWithResources ()
 shoot =
     cmapM_ $ \(Ship a, Position pos) -> void $
-        newEntity (Bullet 40, Position pos, Velocity $ 100 *^ angle a)
+        newEntity (Bullet ShotByShip
+                  , Position pos
+                  , Velocity $ bulletSpeed *^ angle a
+                  , Ttl initBulletTtl
+                  )
 
 
 -- | Returns a function to modify velocity vector based on input

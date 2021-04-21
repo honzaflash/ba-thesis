@@ -57,11 +57,17 @@ askForTextures = lift $ asks resTextures
 askForTexts :: SystemWithResources Texts
 askForTexts = lift $ asks resTexts
 
+askForRandNumGen :: SystemWithResources (IO Double)
+askForRandNumGen = lift $ asks resRandNumGen
+
 askForRandPosGen :: SystemWithResources (IO Position)
 askForRandPosGen = lift $ asks resRandPosGen
 
 askForRandVelGen :: SystemWithResources (IO Velocity)
 askForRandVelGen = lift $ asks resRandVelGen
+
+askForRandNum :: SystemWithResources Double
+askForRandNum = lift $ asks resRandNumGen >>= liftIO
 
 askForRandPos :: SystemWithResources Position
 askForRandPos = lift $ asks resRandPosGen >>= liftIO
@@ -78,6 +84,7 @@ data Resources =
     , resTexts      :: Texts
     , resRandPosGen :: IO Position
     , resRandVelGen :: IO Velocity
+    , resRandNumGen :: IO Double
     }
 
 
@@ -87,12 +94,14 @@ loadResources renderer = do
     -- initialize random generators
     time <- round <$> SDL.time
     randGen :: IO Int <- initStatefulRanGen time 0 99999
-    [seed1, seed2, seed3, seed4] <- replicateM 4 randGen
+    [seed1, seed2, seed3, seed4, seed5] <- replicateM 5 randGen
 
     randomPositionGen <-
         initRandomPositionGenerator seed1 seed2
     randomVelocityGen <-
         initRandomVelocityGenerator seed3 seed4
+    randomNumberGen <-
+        initStatefulRanGen seed5 0 100
 
     -- initialize textures
     textureMap <- loadTextures renderer
@@ -107,6 +116,8 @@ loadResources renderer = do
                 textMap
                 randomPositionGen
                 randomVelocityGen
+                randomNumberGen
+                
 
 
 
@@ -128,6 +139,8 @@ loadTextures renderer = ioOrDie "Failed to load a texture" $
 keyPathList :: [(TextureKey, FilePath)]
 keyPathList =
     [ ("Ship", "resources/ship.png")
+    , ("SmallSaucer", "resources/ufo-small.png")
+    , ("LargeSaucer", "resources/ufo-large.png")
     , ("Small", "resources/asteroid.png")
     , ("Bullet", "resources/bullet.png")
     , ("Background", "resources/space-background.png")
