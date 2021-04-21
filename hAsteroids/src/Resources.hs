@@ -141,7 +141,9 @@ keyPathList =
     [ ("Ship", "resources/ship.png")
     , ("SmallSaucer", "resources/ufo-small.png")
     , ("LargeSaucer", "resources/ufo-large.png")
-    , ("Small", "resources/asteroid.png")
+    , ("SmallAsteroid", "resources/asteroid-small.png")
+    , ("MediumAsteroid", "resources/asteroid-medium.png")
+    , ("LargeAsteroid", "resources/asteroid-large.png")
     , ("Bullet", "resources/bullet.png")
     , ("Background", "resources/space-background.png")
     ]

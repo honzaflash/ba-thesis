@@ -34,16 +34,27 @@ drawScene = do
 drawWorld :: SystemWithResources ()
 drawWorld = do
     drawBackground
-    drawShip
-    drawBullets
     drawAsteroids
+    drawBullets
+    drawUfos
+    drawShip
+    drawLivesAndScore
 
 
 drawShip :: SystemWithResources ()
 drawShip =
     cmapM_ $ \(Ship a, Position pos) -> lift $
-        copyExWR "Ship" pos (V2 60 30) $ a / pi * 180
-        
+        copyExWR "Ship" pos (V2 60 40) $ a / pi * 180
+
+
+drawUfos :: SystemWithResources ()
+drawUfos =
+    cmapM_ $ \(Ufo _ ufoSize, Position pos) -> lift $
+        copyWR (show ufoSize) pos $
+            V2 40 20 ^* case ufoSize of
+                            SmallSaucer -> 1
+                            LargeSaucer -> 2
+
 
 drawBullets :: SystemWithResources ()
 drawBullets =
@@ -54,20 +65,22 @@ drawBullets =
 drawAsteroids :: SystemWithResources ()
 drawAsteroids =
     cmapM_ $ \(Asteroid size, Position pos) -> lift $
-        copyWR "Small" pos $ pure size
+        let textureKey = case size of
+                            32  -> "SmallAsteroid"
+                            64  -> "MediumAsteroid"
+                            128 -> "LargeAsteroid"
+        in copyWR textureKey pos $ pure size
+
+
+drawLivesAndScore :: SystemWithResources ()
+drawLivesAndScore = do
+    (ShipLives lives, Score score) <- get global
+    drawNumber (V2 20 20) lives
+    drawNumber (V2 (windowWidth `div` 2) 20) score
 
 
 drawBackground :: SystemWithResources ()
 drawBackground = lift $ copyWRMaybeRect "Background" Nothing
-
-
--- drawMenu :: SystemWithResources ()
--- drawMenu = do
---     renderer <- askForRenderer
---     texts <- askForTexts
-
---     drawText renderer texts 0 TextPaused
-    -- drawText renderer texts 100 TextPressEscape
 
 
 drawInMenu :: SystemWithResources ()

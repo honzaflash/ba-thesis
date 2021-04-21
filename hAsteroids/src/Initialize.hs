@@ -23,7 +23,6 @@ initializeGame = do
     spawnNewAsteroidWave
 
 
-
 -- | Spawn safely a wave of asteroids
 --   and increment the wave number
 spawnNewAsteroidWave :: SystemWithResources ()
@@ -33,7 +32,7 @@ spawnNewAsteroidWave =
         replicateM_ (n + 4) $ do
             pos <- safePosition shipPos
             vel <- askForRandVel
-            void $ newEntity (Asteroid 80, pos, vel)
+            void $ newEntity (Asteroid 128, pos, vel)
         set global $ WaveNumber $ n + 1 -- increment wave number
     where
         safePosition shipPos = do
