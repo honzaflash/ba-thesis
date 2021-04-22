@@ -1,0 +1,3 @@
+[submodule "thesis-docs"]
+	path = thesis-docs
+	url = https://github.com/honzaflash/ba-thesis-tex.git
