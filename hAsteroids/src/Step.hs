@@ -30,6 +30,8 @@ stepScene dT = do
         cmapM_ $ ufosShoot dT
 
         detectAndHandleCollisions
+
+        awardLifeIf10000
         
         modify global $ \(WaveTime t) -> WaveTime $ t + dT
         spawnUfos
@@ -40,7 +42,7 @@ stepScene dT = do
         destroyDeadUfos
 
 
--- | move everything that has Position and Velocity component
+-- | move everything that has Position and Velocity components
 stepKinetics :: Time -> Kinetic -> Position
 stepKinetics dT (Position p, Velocity v) =
     Position $ wrap $ p + v ^* fromIntegral dT / 100
@@ -53,27 +55,6 @@ stepKinetics dT (Position p, Velocity v) =
           | a < (-50)  = a + m + 100
           | a > m + 50 = a - m - 100
           | otherwise  = a
-
-
--- | detect and handle collisions
--- collisions :: (Asteroid, Position, Entity) -> SystemWithResources ()
--- collisions (Asteroid size, Position aPos, aEty) = do
-    
---     cmapM_ $ \(Bullet _, Position bPos, bEty :: Entity) ->
---                 when (distance aPos bPos < fromIntegral size / 2) $
---                     do
---                         destroy bEty $ Proxy @(Bullet, TimeToLive, Kinetic)
---                         destroy aEty $ Proxy @(Asteroid, Kinetic)
---                         modify global $ \(Score s) -> Score $ s + 100
---                         (Score s) <- get global
---                         liftIO $ putStrLn $ "Score: " ++ show s
-
---     cmapM_ $ \(Ship _, Position sPos, state) ->
-
---                 when (state == Alive && distance aPos sPos < 50 + fromIntegral size / 2) $
---                     do
---                         destroy aEty $ Proxy @(Asteroid, Kinetic)
---                         liftIO $ putStrLn "Score: 0"
 
 
 ufosShoot :: Time -> (Ship, Position, Velocity) -> SystemWithResources ()
@@ -126,10 +107,13 @@ stepShipState dT (Ship a, sEty, Exploding t)
     | t > 0     = pure (Ship $ a + 0.03 * fromIntegral dT, Exploding $ t - dT)
     | otherwise = do
         set sEty $ Position $ V2 (windowWidthF /2) (windowHeightF / 2)
+        set sEty $ Velocity $ V2 0 0
         pure (Ship $ pi * 3 / 2, Respawning 1500)
+
 stepShipState dT (Ship a, _, Respawning t)
     | t > 0     = pure (Ship a, Respawning $ t - dT)
     | otherwise = pure (Ship a, Alive)
+
 stepShipState dT (Ship a, _, Alive) = pure (Ship a, Alive)
 
 
@@ -165,6 +149,14 @@ spawnUfos = do
                              , Velocity $ V2 10 0
                              , Ttl 11000
                              )
+
+
+awardLifeIf10000 :: SystemWithResources ()
+awardLifeIf10000 = do
+    (Score s, LivesAwarded n) <- get global
+    when (s > (n + 1) * 10000) $ do
+        modify global $ \(ShipLives l) -> ShipLives $ l + 1
+        set global $ LivesAwarded $ n + 1
 
 
 -- | Delete ufo if its time to live is less than 1

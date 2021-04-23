@@ -50,6 +50,15 @@ resetWorld = do
     cmapM_ $ \(Bullet _, bEty) -> destroy bEty $ Proxy @BulletComponents
     cmapM_ $ \(Ufo _ _, uEty) -> destroy uEty $ Proxy @UfoComponents
     set global ((mempty, mempty, mempty, mempty, mempty, mempty, mempty, mempty)
-                :: AllGlobals)
+                :: ( ShipLives
+                   , ShipState
+                   , Score
+                   , LivesAwarded
+                   , WaveTime
+                   , WaveNumber
+                   , WavePauseTimer
+                   , GameLoopState
+                   )
+               )
     initializeGame
 

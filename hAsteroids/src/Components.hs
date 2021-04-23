@@ -89,7 +89,9 @@ instance Component Velocity where type Storage Velocity = Map Velocity
 type Kinetic = (Position, Velocity)
 
 
--- | Global components
+-- * Global components
+
+-- | Score
 newtype Score = Score Int
     deriving (Show, Num)
 instance Semigroup Score where (<>) = const
@@ -97,6 +99,16 @@ instance Monoid Score where mempty = 0
 instance Component Score where type Storage Score = Global Score
 
 
+-- | Awarded bonus life points counter
+--   serves for detecting the tipping point between the 10000s
+newtype LivesAwarded = LivesAwarded Int
+    deriving (Show, Num)
+instance Semigroup LivesAwarded where (<>) = const
+instance Monoid LivesAwarded where mempty = 0
+instance Component LivesAwarded where type Storage LivesAwarded = Global LivesAwarded
+
+
+-- | Wave time counter
 newtype WaveTime = WaveTime Int
     deriving (Show, Num)
 instance Semigroup WaveTime where (<>) = const
@@ -104,6 +116,7 @@ instance Monoid WaveTime where mempty = 0
 instance Component WaveTime where type Storage WaveTime = Global WaveTime
 
 
+-- | Wave number counter
 newtype WaveNumber = WaveNumber Int
     deriving (Show, Num)
 instance Semigroup WaveNumber where (<>) = const
@@ -111,6 +124,7 @@ instance Monoid WaveNumber where mempty = 0
 instance Component WaveNumber where type Storage WaveNumber = Global WaveNumber
 
 
+-- | Wave pause timer for a brief pause after clearing all asteroids
 newtype WavePauseTimer = WavePauseTimer Int
     deriving (Show, Num)
 instance Semigroup WavePauseTimer where (<>) = const
@@ -119,6 +133,7 @@ instance Component WavePauseTimer
     where type Storage WavePauseTimer = Global WavePauseTimer
 
 
+-- | State of the main loop
 data GameLoopState
     = Playing
     | Paused
@@ -131,6 +146,7 @@ instance Monoid GameLoopState where mempty = InMenu
 instance Component GameLoopState where type Storage GameLoopState = Global GameLoopState
 
 
+-- | State variable for input handling
 data InputState =
     InputState
     { isHeldW     :: Bool
@@ -140,17 +156,12 @@ data InputState =
     , quitEvent   :: Bool
     }
     deriving Show
-
 instance Semigroup InputState where
     InputState w1 a1 d1 other1 quit1 <> InputState w2 a2 d2 other2 quit2 =
         InputState w2 a2 d2 (other1 <> other2) (quit1 || quit2)
 instance Monoid InputState where
     mempty = InputState False False False [] False
 instance Component InputState where type Storage InputState = Global InputState
-
-
--- | convenience type alias for all global components
-type AllGlobals = (ShipLives, ShipState, Score, WaveTime, WaveNumber, WavePauseTimer, GameLoopState, InputState)
 
 
 -- | Apecs template creates the implementation
@@ -164,6 +175,7 @@ makeWorld "World" [ ''Ship
                   , ''Position
                   , ''Velocity
                   , ''Score
+                  , ''LivesAwarded
                   , ''WaveTime
                   , ''WaveNumber
                   , ''WavePauseTimer
