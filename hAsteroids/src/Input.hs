@@ -5,7 +5,8 @@ module Input
 
 
 import Components
-import Resources
+import Resources ( SystemWithResources )
+import Initialize ( resetWorld )
 import Utility ( Time, bulletSpeed, initBulletTtl )
 
 import Apecs
@@ -13,9 +14,11 @@ import qualified SDL
 import Control.Monad ( void, when )
 import Linear
 import Foreign.C.Types ( CDouble )
+import Control.Monad.State (put)
 
 
 
+-- | Updates input state and reacts to it
 reactToInput :: Time -> SystemWithResources ()
 reactToInput dT = do
     events <- map SDL.eventPayload <$> SDL.pollEvents
@@ -25,7 +28,9 @@ reactToInput dT = do
     (input, loopState, shipState) <- get global
     case (loopState, shipState) of
         (InMenu, _)
-            | wasPressed input spaceKeycode  -> set global Playing
+            | wasPressed input spaceKeycode  -> do
+                resetWorld
+                set global Playing
             | wasPressed input escapeKeycode -> set global Quit
             | otherwise -> pure ()
         (Paused, _)
@@ -41,15 +46,16 @@ reactToInput dT = do
             | otherwise -> pure ()
         -- Playing and ship is Alive or Respawning
         (Playing, _) ->
-            cmapM $ \(Ship a, Velocity vel) ->
+            cmapM $ \(Ship a, Velocity vel) -> do
                 when (wasPressed input escapeKeycode) (set global Paused)
-                >> when (wasPressed input spaceKeycode) shoot
-                >> pure
+                when (wasPressed input spaceKeycode) shoot
+                pure
                     ( Ship $ a + steering dT input
                     , Velocity $ thrust dT input a vel
                     )
 
 
+-- | Create a bullet shot by the ship
 shoot :: SystemWithResources ()
 shoot =
     cmapM_ $ \(Ship a, Position pos) -> void $

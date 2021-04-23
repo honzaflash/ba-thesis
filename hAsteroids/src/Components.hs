@@ -149,9 +149,14 @@ instance Monoid InputState where
 instance Component InputState where type Storage InputState = Global InputState
 
 
+-- | convenience type alias for all global components
+type AllGlobals = (ShipLives, ShipState, Score, WaveTime, WaveNumber, WavePauseTimer, GameLoopState, InputState)
+
+
 -- | Apecs template creates the implementation
 makeWorld "World" [ ''Ship
                   , ''ShipLives
+                  , ''ShipState
                   , ''Ufo
                   , ''Asteroid
                   , ''Bullet
@@ -163,8 +168,6 @@ makeWorld "World" [ ''Ship
                   , ''WaveNumber
                   , ''WavePauseTimer
                   , ''GameLoopState
-                  , ''ShipState
                   , ''InputState
                   ]
-
 
