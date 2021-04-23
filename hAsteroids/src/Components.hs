@@ -44,7 +44,7 @@ instance Component ShipState where type Storage ShipState = Global ShipState
 newtype Asteroid = Asteroid { astSize :: CInt } deriving Show
 instance Component Asteroid where type Storage Asteroid = Map Asteroid
 
-type AsteroidComponent = (Asteroid, Kinetic)
+type AsteroidComponents = (Asteroid, Kinetic)
 
 
 -- | Ufo component

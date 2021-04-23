@@ -6,6 +6,7 @@ module Collisions
 
 import Components
 import Resources
+import Utility
 
 import Apecs
 import Linear
@@ -14,14 +15,16 @@ import Control.Monad ( when )
 
 
 
--- | Detect and handle all collisions in the world
+-- | Detect and handle all the collisions in the world
 detectAndHandleCollisions :: SystemWithResources ()
 detectAndHandleCollisions = do
+    -- detect and handle collisions between individual groups
     asteroidsVsTheRest
     ufosVsShipAndBullets
     shipVsBullets
 
 
+-- | Detect and handle collision between asteroids and the rest
 asteroidsVsTheRest :: SystemWithResources ()
 asteroidsVsTheRest =
     cmapM_ $ \(Asteroid aSize, Position aPos, aEty) -> do
@@ -62,6 +65,7 @@ asteroidsVsTheRest =
             distance pt center < fromIntegral d / 2
 
 
+-- | Detect and handle collision between ufos and the ship or bullets
 ufosVsShipAndBullets :: SystemWithResources ()
 ufosVsShipAndBullets =
     cmapM_ $ \(Ufo _ uSize, Position uPos, uEty) -> do
@@ -98,6 +102,7 @@ ufosVsShipAndBullets =
                 distance pt focus1 + distance pt focus2 < mjAxis
 
 
+-- | Detect and handle collisions between the ship and bullets
 shipVsBullets :: SystemWithResources ()
 shipVsBullets =
     cmapM_ $ \(Ship _, Position sPos, sState) ->
@@ -120,11 +125,29 @@ shipVsBullets =
                     bulletIsHit bEty
 
 
--- TODO
+-- | Handle asteroid collision
 asteroidIsHit :: CInt -> ShotBy -> Entity -> SystemWithResources ()
-asteroidIsHit aSize destroyer aEty = undefined
+asteroidIsHit aSize destroyer aEty = do
+    when (destroyer == ShotByShip) $
+        modify global $ \(Score s) -> Score $ s + reward
+    breakAsteroid
+
+    where
+        reward
+            | aSize == initAsteroidSize                 = 20
+            | aSize == initAsteroidSize `div` 2         = 50
+            | aSize == initAsteroidSize `div` 2 `div` 2 = 100
+
+        breakAsteroid
+            | aSize == initAsteroidSize `div` 2 `div` 2 =
+                destroy aEty $ Proxy @AsteroidComponents
+            | otherwise = do
+                (Position pos, Velocity vel) <- get aEty
+                newEntity (Asteroid $ aSize `div` 2, Velocity $ vel + perp vel, Position pos)
+                set aEty (Asteroid $ aSize `div` 2, Velocity $ vel - perp vel)
 
 
+-- | Handle ship collision
 shipIsHit :: SystemWithResources ()
 shipIsHit =
     modify global $ \(ShipLives x) ->
@@ -135,6 +158,7 @@ shipIsHit =
     -- set sEty (Velocity $ V2 0 0) -- stop ship
 
 
+-- | Handle ufo collision
 ufoIsHit :: UfoSize -> Entity -> SystemWithResources ()
 ufoIsHit uSize uEty = do
     destroy uEty $ Proxy @UfoComponents
@@ -145,6 +169,7 @@ ufoIsHit uSize uEty = do
                      LargeSaucer -> 200
 
 
+-- | Handle bullet collision
 bulletIsHit :: Entity -> SystemWithResources ()
 bulletIsHit bEty =
     destroy bEty $ Proxy @BulletComponents

@@ -41,6 +41,9 @@ initBulletTtl, initUfoBulletTtl :: Integral a => a
 initBulletTtl = 550
 initUfoBulletTtl = 600
 
+initAsteroidSize :: Integral a => a
+initAsteroidSize = 128
+
 
 -- * Helper functions
 
