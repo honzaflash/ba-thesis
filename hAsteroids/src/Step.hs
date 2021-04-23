@@ -1,18 +1,20 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeApplications           #-}
-{-# LANGUAGE MultiWayIf                 #-}
 
-module Step where
+module Step
+( stepScene
+) where
 
 
 import Components
+import Collisions ( detectAndHandleCollisions )
 import Resources
-import Initialize (spawnNewAsteroidWave)
+import Initialize ( spawnNewAsteroidWave )
 import Utility
 
 import Apecs
 import Linear
-import Foreign.C.Types (CDouble)
+import Foreign.C.Types ( CDouble )
 import Control.Monad ( void, when, replicateM_ )
 
 
@@ -26,15 +28,16 @@ stepScene dT = do
         cmap $ decelerateShip dT
         cmapM $ stepShipState dT
         cmapM_ $ ufosShoot dT
-        cmapM_ collisions
-        spawnUfos
-        spawnNewAsteroidWaveIfCleared
-        -- spawnNewAsteroids -- new wave after the last one is destroyed
+
+        detectAndHandleCollisions
+        
         modify global $ \(WaveTime t) -> WaveTime $ t + dT
+        spawnUfos
+        spawnNewAsteroidWaveIfCleared dT
+
         cmap $ \(Ttl t) -> Ttl $ t - dT -- decrement time to live
         destroyDeadBullets
         destroyDeadUfos
-    where waveCleared = pure True :: IO Bool
 
 
 -- | move everything that has Position and Velocity component
@@ -53,26 +56,24 @@ stepKinetics dT (Position p, Velocity v) =
 
 
 -- | detect and handle collisions
-collisions :: (Asteroid, Position, Entity) -> SystemWithResources ()
-collisions (Asteroid size, Position aPos, aEty) = do
-    cmapM_ $ \(Bullet _, Position bPos, bEty :: Entity) ->
-                when (distance aPos bPos < fromIntegral size / 2) $
-                    do
-                        destroy bEty $ Proxy @(Bullet, TimeToLive, Kinetic)
-                        destroy aEty $ Proxy @(Asteroid, Kinetic)
-                        modify global $ \(Score s) -> Score $ s + 100
-                        (Score s) <- get global
-                        liftIO $ putStrLn $ "Score: " ++ show s
-    cmapM_ $ \(Ship _, Position sPos, Velocity vel, sEty :: Entity, state :: ShipState) ->
-                when (state == Alive && distance aPos sPos < 50 + fromIntegral size / 2) $
-                    do
-                        destroy aEty $ Proxy @(Asteroid, Kinetic)
-                        modify global $ \(ShipLives x) ->
-                            (ShipLives $ x - 1, Exploding 700)
-                        set sEty (Velocity $ V2 0 0)
-                        modify global $ \(ShipLives x) ->
-                            if x == 0 then GameOver else Playing
-                        liftIO $ putStrLn "Score: 0"
+-- collisions :: (Asteroid, Position, Entity) -> SystemWithResources ()
+-- collisions (Asteroid size, Position aPos, aEty) = do
+    
+--     cmapM_ $ \(Bullet _, Position bPos, bEty :: Entity) ->
+--                 when (distance aPos bPos < fromIntegral size / 2) $
+--                     do
+--                         destroy bEty $ Proxy @(Bullet, TimeToLive, Kinetic)
+--                         destroy aEty $ Proxy @(Asteroid, Kinetic)
+--                         modify global $ \(Score s) -> Score $ s + 100
+--                         (Score s) <- get global
+--                         liftIO $ putStrLn $ "Score: " ++ show s
+
+--     cmapM_ $ \(Ship _, Position sPos, state) ->
+
+--                 when (state == Alive && distance aPos sPos < 50 + fromIntegral size / 2) $
+--                     do
+--                         destroy aEty $ Proxy @(Asteroid, Kinetic)
+--                         liftIO $ putStrLn "Score: 0"
 
 
 ufosShoot :: Time -> (Ship, Position, Velocity) -> SystemWithResources ()
@@ -132,14 +133,23 @@ stepShipState dT (Ship a, _, Respawning t)
 stepShipState dT (Ship a, _, Alive) = pure (Ship a, Alive)
 
 
-spawnNewAsteroidWaveIfCleared :: SystemWithResources ()
-spawnNewAsteroidWaveIfCleared = do
+-- | Check if all asteroids have been cleared
+--   if so then spawn a new wave and increment the wave counter
+spawnNewAsteroidWaveIfCleared :: Time -> SystemWithResources ()
+spawnNewAsteroidWaveIfCleared dT = do
+    WavePauseTimer timer <- get global
     count <- cfold (\count (Asteroid _) -> count + 1) 0
-    when (count == 0) $ do
-        set global $ WaveTime 0
-        spawnNewAsteroidWave
+    when (count == 0) $
+        if timer > 1500
+            then do
+                    set global (WaveTime 0, WavePauseTimer 0)
+                    spawnNewAsteroidWave
+            else
+                set global (WavePauseTimer $ timer + dT)
 
 
+-- | Randomly spawn ufos with chances increasing with
+--   time spend in one wave
 spawnUfos :: SystemWithResources ()
 spawnUfos = do
     r1 <- askForRandNum

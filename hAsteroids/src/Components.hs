@@ -19,12 +19,13 @@ import qualified SDL.Input as SDL
 
 
 -- | Ship components
-newtype Ship = Ship { sAngle :: Angle } deriving Show
+newtype Ship = Ship { shipAngle :: Angle } deriving Show
 instance Component Ship where type Storage Ship = Unique Ship
 
 type Angle = CDouble
 
-newtype ShipLives = ShipLives Int deriving Show
+newtype ShipLives = ShipLives Int
+    deriving Show
 instance Component ShipLives where type Storage ShipLives = Global ShipLives
 instance Semigroup ShipLives where (<>) = const
 instance Monoid ShipLives where mempty = ShipLives 3
@@ -40,59 +41,82 @@ instance Component ShipState where type Storage ShipState = Global ShipState
 
 
 -- | Asteroid component
-newtype Asteroid = Asteroid { aSize :: CInt } deriving Show
+newtype Asteroid = Asteroid { astSize :: CInt } deriving Show
 instance Component Asteroid where type Storage Asteroid = Map Asteroid
+
+type AsteroidComponent = (Asteroid, Kinetic)
 
 
 -- | Ufo component
 data Ufo = Ufo
-           { uTimeToShoot :: Int
-           , uSize        :: UfoSize
+           { ufoTimeToShoot :: Int
+           , ufoSize        :: UfoSize
            } deriving Show
 instance Component Ufo where type Storage Ufo = Map Ufo
 
 data UfoSize = SmallSaucer | LargeSaucer deriving Show
 
+type UfoComponents = (Ufo, TimeToLive, Kinetic)
+
 
 -- | Bullet component
-newtype Bullet = Bullet { bShotBy :: ShotBy } deriving Show
+newtype Bullet = Bullet { bulletShotBy :: ShotBy } deriving Show
 instance Component Bullet where type Storage Bullet = Map Bullet
 
-data ShotBy = ShotByShip | ShotByUfo deriving Show
+data ShotBy
+    = ShotByShip
+    | ShotByUfo
+    deriving (Show, Eq)
+
+type BulletComponents = (Bullet, TimeToLive, Kinetic)
 
 
 -- | TTL component for bullets and ufos
-newtype TimeToLive = Ttl { getTtl :: Int }
+newtype TimeToLive = Ttl Int
+    deriving Show
 instance Component TimeToLive where type Storage TimeToLive = Map TimeToLive
 
 
 -- | Kinetic components
-newtype Position = Position (V2 CDouble) deriving Show
+newtype Position = Position (V2 CDouble)
+    deriving Show
 instance Component Position where type Storage Position = Map Position
 
-newtype Velocity = Velocity (V2 CDouble) deriving Show
+newtype Velocity = Velocity (V2 CDouble)
+    deriving Show
 instance Component Velocity where type Storage Velocity = Map Velocity
 
 type Kinetic = (Position, Velocity)
 
 
 -- | Global components
-newtype Score = Score Int deriving (Show, Num)
+newtype Score = Score Int
+    deriving (Show, Num)
 instance Semigroup Score where (<>) = const
 instance Monoid Score where mempty = 0
 instance Component Score where type Storage Score = Global Score
 
 
-newtype WaveTime = WaveTime Int deriving (Show, Num)
+newtype WaveTime = WaveTime Int
+    deriving (Show, Num)
 instance Semigroup WaveTime where (<>) = const
 instance Monoid WaveTime where mempty = 0
 instance Component WaveTime where type Storage WaveTime = Global WaveTime
 
 
-newtype WaveNumber = WaveNumber Int deriving (Show, Num)
+newtype WaveNumber = WaveNumber Int
+    deriving (Show, Num)
 instance Semigroup WaveNumber where (<>) = const
 instance Monoid WaveNumber where mempty = 0
 instance Component WaveNumber where type Storage WaveNumber = Global WaveNumber
+
+
+newtype WavePauseTimer = WavePauseTimer Int
+    deriving (Show, Num)
+instance Semigroup WavePauseTimer where (<>) = const
+instance Monoid WavePauseTimer where mempty = 0
+instance Component WavePauseTimer
+    where type Storage WavePauseTimer = Global WavePauseTimer
 
 
 data GameLoopState
@@ -137,6 +161,7 @@ makeWorld "World" [ ''Ship
                   , ''Score
                   , ''WaveTime
                   , ''WaveNumber
+                  , ''WavePauseTimer
                   , ''GameLoopState
                   , ''ShipState
                   , ''InputState
