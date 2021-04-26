@@ -5,11 +5,11 @@ module EventProcessing
 
 import Types
 
-import Linear
+import Linear ( perp )
 import Control.Lens
 import qualified Data.HashMap.Strict as HM
-import Data.HashMap.Strict ((!?))
-import Data.Foldable (fold)
+import Data.HashMap.Strict ( (!?) )
+import Data.Foldable ( fold )
 
 
 
@@ -81,7 +81,7 @@ processBulletEvents =
                 { _bId = (+1) $ maximum $ 1 : HM.keys bullets
                 , _bPosition = pos
                 , _bVelocity = vel
-                , _bTtl = initBulletTtl `div` 2
+                , _bTtl = initUfoBulletTtl
                 , _bShooter = ShotByUfo
                 }
         insertBullet b = HM.insert (b ^. bId) b

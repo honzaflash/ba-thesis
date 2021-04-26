@@ -8,9 +8,9 @@ import Types
 import Step.Common
 import Utility
 
+import qualified Data.HashMap.Strict as HM
 import Linear
 import Control.Lens
-import qualified Data.HashMap.Strict as HM
 
 
 
@@ -49,18 +49,17 @@ stepUfo dT w oldU =
             [ UfoShootsE (oldU ^. uPosition, bulletVelocity)
                 | oldU ^. uTimeToShoot <= 0 ]
         bulletVelocity =
-            Velocity $ (bulletSpeed *^) $ angle $
+            Velocity $ (ufoBulletSpeed *^) $ angle $
                 case oldU ^. uSize of
                     SmallSaucer -> predictiveShooting oldU (w ^. wShip)
                     LargeSaucer -> simpleShooting     oldU (w ^. wShip)
-        ufoBulletSpeed = bulletSpeed * 0.5
 
 
 -- | Predicts ship's position based on its current velocity
 --   and returns an angle for the bullet's velocity
 predictiveShooting :: Ufo -> Ship -> Double
 predictiveShooting u s =
-    unangle (sPos - uPos) + asin (norm sVel * sin beta / bulletSpeed)
+    unangle (sPos - uPos) + asin (norm sVel * sin beta / ufoBulletSpeed)
                    -- law of sines
     where
         beta = unangle (uPos - sPos) - unangle sVel

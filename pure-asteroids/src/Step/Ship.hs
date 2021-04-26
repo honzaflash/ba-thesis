@@ -73,7 +73,7 @@ stepExplodingShip :: Time -> Ship -> (WorldEvents, Ship)
 stepExplodingShip dT ship =
     (,) mempty $
     ship
-      & sAngle +~ 0.01 * fromIntegral dT -- just spin
+      & sAngle +~ 0.02 * fromIntegral dT -- just spin
       & sState %~ stepShipState dT
       & resetIfTransitioningState
 
@@ -108,12 +108,12 @@ thrust :: Time -> InputState -> Angle -> V2 Double -> V2 Double
 thrust dT input direction = if input ^. isHeldW 
                                then (+ thrustStrength *^ angle direction)
                                else id
-    where thrustStrength = 0.04 * fromIntegral dT
+    where thrustStrength = 0.12 * fromIntegral dT
 
 
 -- | Constant deceletration over time
 decelerate :: Time -> V2 Double -> V2 Double
-decelerate dT = ((0.985 ** (fromIntegral dT / 16)) *^)
+decelerate dT = (^* 0.975 ** (fromIntegral dT / fromIntegral targetIterationTime))
 
 
 -- | returns delta angle that should be added to the current
@@ -121,7 +121,7 @@ decelerate dT = ((0.985 ** (fromIntegral dT / 16)) *^)
 steering :: Time -> InputState -> Angle
 steering dT input = (if input ^. isHeldA then (-steeringStrength) else 0)
                     + if input ^. isHeldD then steeringStrength else 0
-    where steeringStrength = 0.0025 * fromIntegral dT
+    where steeringStrength = 0.0045 * fromIntegral dT
 
 
 -- | State decrementor

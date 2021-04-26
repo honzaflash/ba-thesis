@@ -59,16 +59,16 @@ stepBullet dT w oldB =
             mempty & forShip %~ if shipColliding then (HitE :) else id
 
         shipColliding =
-            -- using rectangular hit box (just like the original Atari)
+            -- using square hit box (almost like the original Atari)
             -- might be worth an upgrade though
             let (V2 bx by) = oldB ^. bPosition . pVect
-                (V2 width height) = V2 40 40
-                (V2 left top) = w ^. wShip . sPosition . pVect - V2 20 20
+                (V2 width height) = V2 30 30
+                (V2 left top) = w ^. wShip . sPosition . pVect - V2 15 15
             in
                 oldB ^. bShooter == ShotByUfo
                 && (left < bx && bx < left + width && top < by && by < top + height)
 
-        -- Collision with UFOS
+        -- Collisions with UFOS
         ufosCollisionEvents =
             foldl genEventsUfos mempty $ HM.elems $ w ^. wUfos
         
@@ -94,7 +94,7 @@ stepBullet dT w oldB =
                                 LargeSaucer -> 2
             in
                 oldB ^. bShooter == ShotByShip
-                && norm (bPos - focus1) + norm (bPos - focus2) < mjAxis
+                && distance bPos focus1 + distance bPos focus2 < mjAxis
         
         ufoReward u = case u ^. uSize of
                           SmallSaucer -> 1000

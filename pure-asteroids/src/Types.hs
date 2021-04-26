@@ -8,6 +8,7 @@ import qualified Data.HashMap.Strict as HM
 import Control.Lens ( makeLenses )
 
 
+
 -- | Game world state structure 
 data World =
     World
@@ -54,6 +55,7 @@ data Asteroid =
 
 type AsteroidSize = Int
 
+-- radius of the asteroid
 minAsteroidSize, initAsteroidSize :: Int 
 minAsteroidSize = 16
 initAsteroidSize = 64
@@ -71,12 +73,18 @@ data Bullet =
     }
     deriving Show
 
-data BulletShooter = ShotByShip | ShotByUfo deriving (Eq, Show)
+data BulletShooter
+    = ShotByShip
+    | ShotByUfo
+    deriving (Eq, Show)
 
-bulletSpeed :: Double
-bulletSpeed = 50
-initBulletTtl :: Int
-initBulletTtl = 1400
+bulletSpeed, ufoBulletSpeed :: Floating a => a
+bulletSpeed = 130
+ufoBulletSpeed = 80
+
+initBulletTtl, initUfoBulletTtl :: Integral a => a
+initBulletTtl = 550
+initUfoBulletTtl = 600
 
 
 -- | Ufos state structure

@@ -11,8 +11,9 @@ import qualified SDL
 import qualified Data.HashMap.Strict as HM
 import Foreign.C.Types ( CInt )
 import Data.Foldable ( fold )
-import Linear
+import Control.Monad ( zipWithM_ )
 import Control.Lens
+import Linear
 
 
 
@@ -123,14 +124,14 @@ drawNumber ::
     -> V2 CInt
     -> a
     -> IO ()
-drawNumber renderer texts pos = fold .
-    zipWith (drawText renderer texts)
+drawNumber renderer texts pos =
+    zipWithM_ (drawText renderer texts)
         [pos + V2 (0 + i * 16) 0 | i <- [0..]] . numToTextKeys
 
 
 drawCenteredTexts :: SDL.Renderer -> Texts -> [TextKey] -> IO ()
-drawCenteredTexts renderer texts = fold .
-    zipWith (drawCenteredText renderer texts) [100 * i | i <- [2..]]
+drawCenteredTexts renderer texts =
+    zipWithM_ (drawCenteredText renderer texts) [100 * i | i <- [2..]]
 
 
 drawCenteredText :: SDL.Renderer -> Texts -> CInt -> TextKey -> IO ()

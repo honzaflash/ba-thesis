@@ -6,11 +6,11 @@ module GameLoop
 
 import Types
 import Input
-import Resources
+import Resources ( Texts )
 import EventProcessing ( processWorldEvents )
 import Step ( stepWorld )
 import Initialize ( initializeWorld )
-import Draw
+import Draw ( drawScene )
 import Utility
 
 import qualified SDL
@@ -25,18 +25,17 @@ gameLoop
     :: SDL.Renderer
     -> Texts
     -> RandomStream Double
-    -> Time
-    -> Time
+    -> Time -- beginnig of the frame computation time stamp
+    -> Time -- time to apply to the world
     -> LoopState
     -> InputState
     -> WorldEvents
     -> World
     -> IO ()
-gameLoop r texts rand prevTime deltaTime loopState prevInput wEvents oldW = do
+gameLoop r texts rand startTime deltaTime loopState prevInput wEvents oldW = do
 
     newInput <- processInput prevInput <$> SDL.pollEvents
 
-    
     -- World updating
     let (newWEvents, newW) = updateWorldIfPlaying newInput loopState
     
@@ -49,12 +48,20 @@ gameLoop r texts rand prevTime deltaTime loopState prevInput wEvents oldW = do
 
     -- FPS management
     currentTime <- fromIntegral <$> SDL.ticks
-    frameTime <- min 64 <$> lockFps 16 currentTime
+    (delay, elapsedTime) <- fmap (min 64) <$> lockFps 16 currentTime
 
-    -- Next frame
     unless (newInput ^. quitEvent || isQuitGame loopState) $
-        gameLoop r texts (drop 3 rand) currentTime frameTime newLoopState newInput newWEvents newW'
-                               -- dropping 3 that were used in stepWorld
+    -- Next frame
+        gameLoop r
+                 texts
+                 (drop 3 rand) -- dropping 3 that were used in stepWorld
+                 (currentTime + delay) -- roughly the time of this call
+                 (elapsedTime + delay) -- delta time for next frame
+                 newLoopState
+                 newInput
+                 newWEvents
+                 newW'
+
     where
         -- update world only if loop is in 'Playing' state 
         updateWorldIfPlaying newInput Playing =
@@ -92,10 +99,10 @@ gameLoop r texts rand prevTime deltaTime loopState prevInput wEvents oldW = do
 
         -- locking fps
         lockFps targetTime currentTime = do
-            let elapsedTime = currentTime - prevTime
+            let elapsedTime = currentTime - startTime
             let delay = max 0 $ targetTime - elapsedTime
             SDL.delay $ fromIntegral delay
-            pure $ elapsedTime + delay
+            pure (delay, elapsedTime)
 
         isQuitGame QuitGame = True
         isQuitGame _        = False
