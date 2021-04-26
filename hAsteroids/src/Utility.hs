@@ -14,6 +14,7 @@ import Data.List
 import Linear
 
 
+
 -- * Types
 
 type Time = Int 
@@ -41,16 +42,9 @@ initBulletTtl, initUfoBulletTtl :: Integral a => a
 initBulletTtl = 550
 initUfoBulletTtl = 600
 
+-- diameter of the asteroid
 initAsteroidSize :: Integral a => a
 initAsteroidSize = 128
-
-
--- * Helper functions
-
--- cap velocity to max speed
-capVelocity :: CDouble -> Velocity -> Velocity
-capVelocity maxSpeed (Velocity vect) = Velocity $
-    if norm vect > maxSpeed then maxSpeed *^ signorm vect else vect
 
 
 -- * stateful random generator initializers

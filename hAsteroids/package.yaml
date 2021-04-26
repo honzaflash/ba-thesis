@@ -1,6 +1,6 @@
 name:                hAsteroids
 version:             0.1.0.0
-github:              "honzaflash/hAsteroids"
+github:              "honzaflash/ba-thesis/hAsteroids"
 license:             BSD3
 author:              "Jan Rychlý"
 copyright:           "2021 Jan Rychlý"
