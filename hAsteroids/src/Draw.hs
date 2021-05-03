@@ -16,6 +16,7 @@ import Linear
 
 
 
+-- | Takes care of all the rendering
 drawScene :: SystemWithResources ()
 drawScene = do 
     lift clearRenderer
@@ -30,7 +31,29 @@ drawScene = do
     
     lift presentRenderer
 
+    where
+        drawInMenu =
+            drawCenteredTexts
+                [ TextMainMenu
+                , TextPressSpaceToStartNewGame
+                , TextPressEscapeToQuit
+                ]
 
+        drawPaused =
+            drawCenteredTexts
+                [ TextPaused
+                , TextPressSpaceToUnpause
+                , TextPressEscapeToExitToMainMenu
+                ]
+
+        drawGameOver =
+            drawCenteredTexts
+                [ TextGameOver
+                , TextPressSpaceToContinue
+                ]
+
+
+-- | Draw the background, entities and UI
 drawWorld :: SystemWithResources ()
 drawWorld = do
     drawBackground
@@ -81,32 +104,6 @@ drawLivesAndScore = do
 
 drawBackground :: SystemWithResources ()
 drawBackground = lift $ copyWRMaybeRect "Background" Nothing
-
-
-drawInMenu :: SystemWithResources ()
-drawInMenu =
-    drawCenteredTexts
-        [ TextMainMenu
-        , TextPressSpaceToStartNewGame
-        , TextPressEscapeToQuit
-        ]
-
-
-drawPaused :: SystemWithResources ()
-drawPaused =
-    drawCenteredTexts
-        [ TextPaused
-        , TextPressSpaceToUnpause
-        , TextPressEscapeToExitToMainMenu
-        ]
-
-
-drawGameOver :: SystemWithResources ()
-drawGameOver =
-    drawCenteredTexts
-        [ TextGameOver
-        , TextPressSpaceToContinue
-        ]
 
 
 drawNumber :: ( Show a, Num a ) => V2 CInt -> a -> SystemWithResources ()

@@ -57,6 +57,28 @@ stepKinetics dT (Position p, Velocity v) =
           | otherwise  = a
 
 
+-- | Apply deceleration
+decelerateShip :: Time -> (Ship, Velocity) -> Velocity
+decelerateShip dT (_, Velocity v) =
+    Velocity $ v ^* (0.975 ** (fromIntegral dT / fromIntegral targetDeltaTime))
+
+
+-- | update the ship state and modify ship components along the way
+stepShipState :: Time -> (Ship, Entity, ShipState) -> SystemWithResources (Ship, ShipState)
+stepShipState dT (Ship a, sEty, Exploding t)
+    | t > 0     = pure (Ship $ a + 0.03 * fromIntegral dT, Exploding $ t - dT)
+    | otherwise = do
+        set sEty $ Position $ V2 (windowWidthF /2) (windowHeightF / 2)
+        set sEty $ Velocity $ V2 0 0
+        pure (Ship $ pi * 3 / 2, Respawning 1500)
+
+stepShipState dT (Ship a, _, Respawning t)
+    | t > 0     = pure (Ship a, Respawning $ t - dT)
+    | otherwise = pure (Ship a, Alive)
+
+stepShipState dT (Ship a, _, Alive) = pure (Ship a, Alive)
+
+
 ufosShoot :: Time -> (Ship, Position, Velocity) -> SystemWithResources ()
 ufosShoot dT (Ship _, Position shipPos, Velocity shipVel) =
     cmapM $ \(Ufo tts size, Position ufoPos) ->
@@ -96,40 +118,12 @@ simpleShooting uPos sPos _ =
             fromIntegral (round (alfa / 2 / pi * 8) :: Int) / 8 * 2 * pi
 
 
-decelerateShip :: Time -> (Ship, Velocity) -> Velocity
-decelerateShip dT (_, Velocity v) =
-    Velocity $ v ^* (0.975 ** (fromIntegral dT / fromIntegral targetDeltaTime))
-
-
--- | update the ship state and modify ship components along the way
-stepShipState :: Time -> (Ship, Entity, ShipState) -> SystemWithResources (Ship, ShipState)
-stepShipState dT (Ship a, sEty, Exploding t)
-    | t > 0     = pure (Ship $ a + 0.03 * fromIntegral dT, Exploding $ t - dT)
-    | otherwise = do
-        set sEty $ Position $ V2 (windowWidthF /2) (windowHeightF / 2)
-        set sEty $ Velocity $ V2 0 0
-        pure (Ship $ pi * 3 / 2, Respawning 1500)
-
-stepShipState dT (Ship a, _, Respawning t)
-    | t > 0     = pure (Ship a, Respawning $ t - dT)
-    | otherwise = pure (Ship a, Alive)
-
-stepShipState dT (Ship a, _, Alive) = pure (Ship a, Alive)
-
-
--- | Check if all asteroids have been cleared
---   if so then spawn a new wave and increment the wave counter
-spawnNewAsteroidWaveIfCleared :: Time -> SystemWithResources ()
-spawnNewAsteroidWaveIfCleared dT = do
-    WavePauseTimer timer <- get global
-    count <- cfold (\count (Asteroid _) -> count + 1) 0
-    when (count == 0) $
-        if timer > 1500
-            then do
-                    set global (WaveTime 0, WavePauseTimer 0)
-                    spawnNewAsteroidWave
-            else
-                set global (WavePauseTimer $ timer + dT)
+awardLifeIf10000 :: SystemWithResources ()
+awardLifeIf10000 = do
+    (Score s, LivesAwarded n) <- get global
+    when (s > (n + 1) * 10000) $ do
+        modify global $ \(ShipLives l) -> ShipLives $ l + 1
+        set global $ LivesAwarded $ n + 1
 
 
 -- | Randomly spawn ufos with chances increasing with
@@ -151,12 +145,19 @@ spawnUfos = do
                              )
 
 
-awardLifeIf10000 :: SystemWithResources ()
-awardLifeIf10000 = do
-    (Score s, LivesAwarded n) <- get global
-    when (s > (n + 1) * 10000) $ do
-        modify global $ \(ShipLives l) -> ShipLives $ l + 1
-        set global $ LivesAwarded $ n + 1
+-- | Check if all asteroids have been cleared
+--   if so then spawn a new wave and increment the wave counter
+spawnNewAsteroidWaveIfCleared :: Time -> SystemWithResources ()
+spawnNewAsteroidWaveIfCleared dT = do
+    WavePauseTimer timer <- get global
+    count <- cfold (\count (Asteroid _) -> count + 1) 0
+    when (count == 0) $
+        if timer > 1500
+            then do
+                    set global (WaveTime 0, WavePauseTimer 0)
+                    spawnNewAsteroidWave
+            else
+                set global (WavePauseTimer $ timer + dT)
 
 
 -- | Delete ufo if its time to live is less than 1

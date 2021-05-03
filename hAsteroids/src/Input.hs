@@ -14,7 +14,6 @@ import qualified SDL
 import Control.Monad ( void, when )
 import Linear
 import Foreign.C.Types ( CDouble )
-import Control.Monad.State (put)
 
 
 

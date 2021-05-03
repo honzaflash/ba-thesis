@@ -40,6 +40,8 @@ the rules and general behaviour is the same.
 - ## hAsteroids
     Clone of Atari Asteroids using Apecs library
 
+    ![Ship batteling an alien flying saucer](screenshots/saucer.jpg)
+
     Serves as an example of monad-everything aproach.
 
     Currently in a "good enough" state.

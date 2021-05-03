@@ -2,6 +2,8 @@
 
 A clone of Atari Asteroids using the Apecs library
 
+![Ship batteling an alien flying saucer](screenshots/saucer.jpg)
+
 This Haskell clone of Asteroids does not strive
 to be as accurate of a clone as possible
 but I got decently close.
@@ -30,9 +32,7 @@ with the game world. Imo it is nice and it
 makes things simpler but it also makes the code
 less expressive and less protected by the type system.
 
-Perhaps there is some `State` kung-fu I could
-learn to make some functions more isolated
-by givign up the `WithResources` reader monad.
+It would be better to make the monads more polymorphic, separating world changes and rendering.
 But I figured I might as well lean into the monads
 and then use this extreme as an example in my thesis
 of how too many monads can be bad for your code.
