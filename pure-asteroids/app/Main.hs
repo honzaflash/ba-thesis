@@ -13,9 +13,10 @@ import qualified SDL.Font as FNT
 import Control.Exception
 
 
+
 main :: IO ()
 main = do
-    putStrLn "...starting"
+    putStrLn "Welcome pilot!"
 
     SDL.initialize [SDL.InitVideo]
     FNT.initialize
@@ -24,7 +25,7 @@ main = do
         SDL.createWindow "hAsteroids"
              SDL.defaultWindow
             { --SDL.windowBorder = False
-              SDL.windowInitialSize = SDL.V2 1024 768 --V2 windowWidth windowHeight
+              SDL.windowInitialSize = SDL.V2 windowWidth windowHeight
             }
     renderer <-
         SDL.createRenderer window (-1)
@@ -36,13 +37,16 @@ main = do
     SDL.showWindow window
 
     texts <- loadTexts renderer
-    let rand = randStreamGen (0, 100) 420 -- todo better seed
+
+    seed <- round <$> SDL.time
+    let rand = randStreamGen (0, 100) $ seed
 
     gameLoop renderer texts rand 0 16 MainMenu mempty mempty initializeWorld
         `catch` \(e :: SomeException) -> putStrLn ("Whoopsie: " ++ show e)
 
-    -- TODO  destroy textures
+    destroyTexts texts
     SDL.destroyWindow window
+    SDL.destroyRenderer renderer
     FNT.quit
     SDL.quit
 

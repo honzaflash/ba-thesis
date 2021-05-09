@@ -5,7 +5,7 @@ module Main
 
 
 import GameLoop ( gameLoop )
-import Resources ( loadResources, runWithResources )
+import Resources ( loadResources, runWithResources, freeResources )
 import Components ( initWorld )
 import Initialize ( initializeGame )
 import Utility
@@ -21,7 +21,7 @@ import Apecs ( runWith )
 
 main :: IO ()
 main = do
-    putStrLn "hello, main.hs here"
+    putStrLn "Welcom pilot!"
     SDL.initialize [SDL.InitVideo]
     FNT.initialize
 
@@ -57,11 +57,10 @@ main = do
             gameLoop 0 0
 
     -- quit
-    -- TODO freeResources
-    SDL.destroyRenderer renderer
+    freeResources resources
     SDL.destroyWindow window
     IMG.quit
     SDL.quit
-    
-    exitSuccess
+
+    putStrLn "Good bye!!"
 

@@ -1,6 +1,6 @@
 module EventProcessing
-    ( processWorldEvents )
-    where
+( processWorldEvents )
+where
 
 
 import Types

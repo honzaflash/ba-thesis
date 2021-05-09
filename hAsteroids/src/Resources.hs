@@ -4,18 +4,30 @@
 {-# LANGUAGE KindSignatures #-}
 
 module Resources
--- ( loadResources
--- , runWithResources
---   -- TODO freeResources
--- , Resources
--- , WithResources
--- , EffectsWithResources
--- , SystemWithResources
--- , Textures
--- , Texts
--- , TextTexture(..)
--- ) where
-where
+( loadResources
+, runWithResources
+-- , askForRenderer
+, resRenderer
+-- , askForTextures
+, resTextures
+-- , askForTexts
+, resTexts
+, askForRandNum
+, askForRandPos
+, askForRandVel
+, askForRandNumGen
+, askForRandPosGen
+, askForRandVelGen
+, freeResources
+, numToTextKeys
+, Resources
+, WithResources
+, SystemWithResources
+, Textures
+, TextureKey(..)
+, Texts
+, TextKey(..)
+) where
 
 
 import Components ( Velocity, Position, World )
@@ -125,7 +137,18 @@ loadResources renderer = do
 
 -- | collection type for all the textures
 type Textures = HM.HashMap TextureKey SDL.Texture
-type TextureKey = String
+
+data TextureKey
+    = ShipTexture
+    | SmallSaucerTexture
+    | LargeSaucerTexture
+    | SmallAsteroidTexture
+    | MediumAsteroidTexture
+    | LargeAsteroidTexture
+    | BulletTexture
+    | BackgroundTexture
+    deriving (Eq, Generic, Show)
+instance Hashable TextureKey
 
 
 loadTextures :: SDL.Renderer -> IO Textures
@@ -138,14 +161,14 @@ loadTextures renderer = ioOrDie "Failed to load a texture" $
         
 keyPathList :: [(TextureKey, FilePath)]
 keyPathList =
-    [ ("Ship", "resources/ship.png")
-    , ("SmallSaucer", "resources/ufo-small.png")
-    , ("LargeSaucer", "resources/ufo-large.png")
-    , ("SmallAsteroid", "resources/asteroid-small.png")
-    , ("MediumAsteroid", "resources/asteroid-medium.png")
-    , ("LargeAsteroid", "resources/asteroid-large.png")
-    , ("Bullet", "resources/bullet.png")
-    , ("Background", "resources/space-background.png")
+    [ (ShipTexture, "resources/ship.png")
+    , (SmallSaucerTexture, "resources/ufo-small.png")
+    , (LargeSaucerTexture, "resources/ufo-large.png")
+    , (SmallAsteroidTexture, "resources/asteroid-small.png")
+    , (MediumAsteroidTexture, "resources/asteroid-medium.png")
+    , (LargeAsteroidTexture, "resources/asteroid-large.png")
+    , (BulletTexture, "resources/bullet.png")
+    , (BackgroundTexture, "resources/space-background.png")
     ]
 
 
@@ -242,4 +265,11 @@ keySizeTextList =
 
 numToTextKeys :: (Show a, Num a) => a -> [TextKey]
 numToTextKeys = mapMaybe strNumToTextKey . show
+
+
+freeResources :: Resources -> IO ()
+freeResources res = do
+    SDL.destroyRenderer $ resRenderer res
+    sequence_ $ HM.map SDL.destroyTexture $ resTexts res
+    sequence_ $ HM.map SDL.destroyTexture $ resTextures res
 
