@@ -5,26 +5,40 @@ implementations including an already existing imperative one.
 
 ## Instalation of the games
 
-For each of the projects run `stack build` and
-`stack exec name-of-the-executable` (I find this process
-doesn't work on my windows machine for some reason
-that I haven't looked into yet).
-
-Alternatively you can just run `stack ghci` and in ghci
-call the `main` function.
-
-### It is required to have SDL2 installed:
-
+The [Haskell Stack](https://docs.haskellstack.org/en/stable/GUIDE/)
+tool is required for installation.
+You also need the `SDL` library, which can be installed like this:
+-  On Ubuntu
+    ```
+    sudo apt install libsdl2-dev libsdl2-ttf-dev libsdl2-image-dev
+    ```
  - On Windows
-
     ```
     stack exec -- pacman -S mingw64/mingw-w64-x86_64-pkg-config mingw64/mingw-w64-x86_64-SDL2 mingw64/mingw-w64-x86_64-SDL2_ttf mingw64/mingw-w64-x86_64-SDL2_image
     ```
+Note: you don't need SDL Image if you are only interested in
+trying pure-asteroids.
 
+If you have the SDL libraries, run `stack build` in the directory of the game you want to install. This may take *a while*.
+`stack exec name-of-the-executable` (I find this process
+doesn't work on my windows machine for some reason
+that I haven't looked into yet).
 -  On Ubuntu
-
     ```
-    sudo apt install libsdl2-dev libsdl2-ttf-dev libsdl2-image-dev
+    stack build
+    stack exec <project-name>-exe
+    ```
+ - On Windows
+    ```
+    stack build
+    stack exec <project-name>-exe
+    ```
+    For some reason I have issues with `stack build` on Windows
+    so alternatively, you can use `stack ghci` and
+    run the `main` function yourself.
+    ```
+    stack ghci
+    main
     ```
 
 ## About the games
@@ -38,9 +52,9 @@ The gameplay is slighly different but
 the rules and general behaviour is the same.
 
 - ## hAsteroids
-    Clone of Atari Asteroids using Apecs library
+    Clone of Atari Asteroids using apecs.
 
-    ![Ship batteling an alien flying saucer](screenshots/saucer.jpg)
+    ![Ship batteling an alien flying saucer](hAsteroids/screenshots/saucer.jpg)
 
     Serves as an example of monad-everything aproach.
 
@@ -50,9 +64,11 @@ the rules and general behaviour is the same.
 
 - ## pure-asteroids
     Clone of Atari Asteroids with focus on
-    safe pure functions
+    safe pure functions and "pure" vector graphics :)
+
+    ![Ship batteling an alien flying saucer](pure-asteroids/pure-screenshot.png)
     
-    Serves as an example of "monads bad" aproach.
+    Serves as an example of "monad bad" extreme approach.
 
     Currently in a "good enough" state.
 

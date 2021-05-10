@@ -44,8 +44,12 @@ Here's how the separate entity collections communicate together:
 
 ![entity groups relationships](entity-relationships.png)
 
-Here is a pseudo-state-machine of the main game loop (`LoopState`)
-and the ship (`ShipSate`):
+This is the flow of data in `gameLoop`:
+
+![entity groups relationships](world-flow-detailed.png)
+
+And here's one more diagram :O with a pseudo-state-machine of
+the main game loop (`LoopState`) and the ship (`ShipSate`):
 
 ![game loop state machine](gameloop-state-machine.png)
 
