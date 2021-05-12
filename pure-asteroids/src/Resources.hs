@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 module Resources
 ( loadTexts
+, destroyTexts
 , Texts
 , TextKey (..)
 , numToTextKeys
@@ -111,4 +112,8 @@ keySizeTextList =
 
 numToTextKeys :: (Show a, Num a) => a -> [TextKey]
 numToTextKeys = mapMaybe strNumToTextKey . show
+
+
+destroyTexts :: Texts -> IO ()
+destroyTexts = sequence_ . HM.map SDL.destroyTexture
 
