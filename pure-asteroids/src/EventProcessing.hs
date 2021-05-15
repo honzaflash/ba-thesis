@@ -13,7 +13,7 @@ import Data.Foldable ( fold )
 
 
 
--- | Process all WorldEvent
+-- | Process all WorldEvents
 processWorldEvents :: WorldEvents -> World -> World
 processWorldEvents events world =
     world

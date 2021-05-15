@@ -18,22 +18,28 @@ import Control.Lens
 
 
 
-stepWorld :: Time -> InputState -> RandomStream Double -> World -> (WorldEvents, World)
-stepWorld deltaTime input rand oldW =
+-- | Update the world simulating physics and reacting to input
+stepWorld
+    :: Time -- the frame delta time
+    -> InputState -- current state of input
+    -> RandomStream Double -- infinite list of random doubles
+    -> World -- old world state
+    -> (WorldEvents, World) -- new world state and events
+stepWorld dT input rand oldW =
     let
-        (eventsS, newShip)    = stepShip deltaTime input oldW $ oldW ^. wShip
-        (eventsB, newBullets) = stepBullets deltaTime input oldW $ oldW ^. wBullets
-        (eventsU, newUfos)    = stepUfos deltaTime rand oldW $ oldW ^. wUfos
-        (eventsScr, newScore) = stepScore deltaTime $ oldW ^. wScore
+        (eventsS, newShip)    = stepShip dT input oldW $ oldW ^. wShip
+        (eventsB, newBullets) = stepBullets dT input oldW $ oldW ^. wBullets
+        (eventsU, newUfos)    = stepUfos dT rand oldW $ oldW ^. wUfos
+        (eventsScr, newScore) = stepScore dT $ oldW ^. wScore
     in
         (,) (eventsS <> eventsB <> eventsU <> eventsScr) $
         checkWave $
         oldW
           & wShip      .~ newShip
-          & wAsteroids %~ stepAsteroids deltaTime
+          & wAsteroids %~ stepAsteroids dT
           & wBullets   .~ newBullets
           & wUfos      .~ newUfos
-          & wWaveTime  +~ deltaTime
+          & wWaveTime  +~ dT
           & wScore     .~ newScore
 
     where
@@ -41,14 +47,14 @@ stepWorld deltaTime input rand oldW =
             | null (w ^. wAsteroids) &&
                 w ^. wWavePause <  2000 =
                         w
-                         & wWavePause +~ deltaTime
+                         & wWavePause +~ dT
                          & wWaveTime .~ 0
             | null (w ^. wAsteroids) &&
                 w ^. wWavePause >= 2000 =
                         w
                          & wWavePause .~ 0
                          & wAsteroids .~ safeRandomAsteroidsSpawn
-                                            (oldW ^. wWaveTime) -- time as a seed
+                                            (oldW ^. wScore . sValue) -- Score as a seed
                                             (w ^. wShip)
                                             (w ^. wWaveNum + 4)
                          & wWaveNum +~ 1
