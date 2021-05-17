@@ -4,6 +4,7 @@
 
 resolver:
         lts-17.10
+
 # User packages to be built.
 # packages:
 # - some-directory
@@ -15,10 +16,14 @@ resolver:
 packages:
 - .
 
+build:
+  library-profiling: true
+  executable-profiling: true
+
 # Dependency packages to be pulled from upstream that are not in the resolver.
 # These entries can reference officially published versions as well as
 # forks / in-progress versions pinned to a git hash. For example:
-#
+
 extra-deps:
         - random-1.2.0
 

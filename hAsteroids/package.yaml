@@ -34,9 +34,9 @@ library:
   source-dirs: src
 
 executables:
-  hAsteroids-exe:
+  bench-h:
     main:         Main.hs
-    source-dirs:  app
+    source-dirs:  bench
     ghc-options:
     - -threaded
     - -rtsopts

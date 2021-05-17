@@ -105,7 +105,7 @@ loadResources :: SDL.Renderer -> IO Resources
 loadResources renderer = do
     -- initialize random generators
     time <- round <$> SDL.time
-    randGen :: IO Int <- initStatefulRanGen time 0 99999
+    randGen :: IO Int <- initStatefulRanGen 420 0 99999
     [seed1, seed2, seed3, seed4, seed5] <- replicateM 5 randGen
 
     randomPositionGen <-

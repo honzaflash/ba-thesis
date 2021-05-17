@@ -1,6 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Input
 ( reactToInput
+, reactToInput'
 ) where
 
 
@@ -15,6 +16,44 @@ import Control.Monad ( void, when )
 import Linear
 import Foreign.C.Types ( CDouble )
 
+
+
+-- | Hacked input reactor
+reactToInput' :: Time -> InputState -> SystemWithResources ()
+reactToInput' dT inputHack = do
+    events <- map SDL.eventPayload <$> SDL.pollEvents
+    modify global $ \(inputState :: InputState) ->
+        updateInputState inputState events
+    set global inputHack
+    
+    (input, loopState, shipState) <- get global
+    case (loopState, shipState) of
+        (InMenu, _)
+            | wasPressed input spaceKeycode  -> do
+                resetWorld
+                set global Playing
+            | wasPressed input escapeKeycode -> set global Quit
+            | otherwise -> pure ()
+        (Paused, _)
+            | wasPressed input spaceKeycode  -> set global Playing
+            | wasPressed input escapeKeycode -> set global InMenu 
+            | otherwise -> pure ()
+        (GameOver, _)
+            | wasPressed input spaceKeycode  -> set global InMenu
+            | otherwise -> pure ()
+        (Quit, _) -> pure ()
+        (Playing, Exploding _)
+            | wasPressed input escapeKeycode -> set global Paused
+            | otherwise -> pure ()
+        -- Playing and ship is Alive or Respawning
+        (Playing, _) ->
+            cmapM $ \(Ship a, Velocity vel) -> do
+                when (wasPressed input escapeKeycode) (set global Paused)
+                when (wasPressed input spaceKeycode) shoot
+                pure
+                    ( Ship $ a + steering dT input
+                    , Velocity $ thrust dT input a vel
+                    )
 
 
 -- | Updates input state and reacts to it
