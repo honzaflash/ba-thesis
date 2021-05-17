@@ -17,7 +17,6 @@ import Control.Monad ( unless )
 
 
 
--- gameLoop :: (SDL.Renderer, Textures, Texts, IO Position, IO Velocity) -> Time -> World -> IO ()
 gameLoop :: Time -> Time -> SystemWithResources ()
 gameLoop prevTime deltaTime = do
 

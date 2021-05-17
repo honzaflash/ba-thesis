@@ -17,6 +17,7 @@ import Linear
 
 
 
+-- | draw the complete scene based on the loop state
 drawScene :: SDL.Renderer -> Texts -> LoopState -> World -> IO ()
 drawScene renderer texts loopState w = do
     SDL.rendererDrawColor renderer SDL.$= V4 0 0 0 0
@@ -32,6 +33,7 @@ drawScene renderer texts loopState w = do
     SDL.present renderer
 
 
+-- | draw the contents of World - entities, lives, score
 drawWorld :: SDL.Renderer -> Texts -> World -> IO ()
 drawWorld renderer texts w = do
     SDL.rendererDrawColor renderer SDL.$= V4 255 255 255 255
@@ -55,8 +57,8 @@ drawAsteroid renderer a =
         -- generates regular heptagon of given size
         asteroidShape =
             map ((+ a ^. aPosition . pVect) . asteroidVertex) [1..7]
-        asteroidVertex i = V2 ((*) sizeF . cos $ pi * 2 / 7 * i)
-                                ((*) sizeF . sin $ pi * 2 / 7 * i)
+        asteroidVertex i = V2 ((sizeF *) . cos $ pi * 2 / 7 * i)
+                              ((sizeF *) . sin $ pi * 2 / 7 * i)
         sizeF = fromIntegral $ a ^. aSize
 
 
@@ -73,7 +75,6 @@ drawBullet renderer =
 -- | Helper function for drawing closed shapes
 drawShape :: RealFrac a => SDL.Renderer -> [V2 a] -> IO ()
 drawShape r = (\pts -> drawLines pts $ head pts) . map (SDL.P . fmap round)
-    -- is this slower than SDL.drawLines??
     where
         drawLines [  ]       _      = pure ()
         drawLines [pt]       termPt = SDL.drawLine r pt termPt

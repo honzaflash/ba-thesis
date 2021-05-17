@@ -1,7 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
-
 module Main where
+
 
 import Initialize
 import Resources
@@ -22,10 +22,9 @@ main = do
     FNT.initialize
     
     window <-
-        SDL.createWindow "hAsteroids"
-             SDL.defaultWindow
-            { --SDL.windowBorder = False
-              SDL.windowInitialSize = SDL.V2 windowWidth windowHeight
+        SDL.createWindow "pure-asteroids"
+            SDL.defaultWindow
+            { SDL.windowInitialSize = SDL.V2 windowWidth windowHeight
             }
     renderer <-
         SDL.createRenderer window (-1)

@@ -21,7 +21,7 @@ import Apecs ( runWith )
 
 main :: IO ()
 main = do
-    putStrLn "Welcom pilot!"
+    putStrLn "Welcome pilot!"
     SDL.initialize [SDL.InitVideo]
     FNT.initialize
 
@@ -58,6 +58,7 @@ main = do
 
     -- quit
     freeResources resources
+    SDL.destroyRenderer renderer
     SDL.destroyWindow window
     IMG.quit
     SDL.quit
