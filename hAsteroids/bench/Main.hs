@@ -57,10 +57,11 @@ main = do
     let [runTime, minFrameTime, astCount, lilUfoC, bigUfoC] =
             case map readInt args of
                 [a] -> [a, 0, 50, 20, 20]
-                [a, b] -> [a, 0, 50, 20, 20]
-                [a, b, c] -> [a, 0, 50, 20, 20]
-                [a, b, c, d, e] -> [a, 0, 50, 20, 20]
-                _ -> [1000, 0, 50, 20, 20] -- should not happen
+                [a, b] -> [a, b, 50, 20, 20]
+                [a, b, c] -> [a, b, c, 20, 20]
+                [a, b, c, d] -> [a, b, c, d, d]
+                [a, b, c, d, e] -> [a, b, c, d, e]
+                _ -> [1000, 0, 50, 20, 20]
 
     SDL.initialize [SDL.InitVideo]
     FNT.initialize
@@ -100,7 +101,7 @@ main = do
         usage = do
             name <- getProgName
             putStrLn $ name ++
-                " <runtime> <min-frame-time> <ast-count> <lil-ufo-count> <big-ufo-count>"
+                " <runtime> [<min-frame-time> [<ast-count> [<lil-ufo-count> <big-ufo-count>]|[<ufo-count>]]]"
             exitSuccess
         
         readInt :: String -> Int

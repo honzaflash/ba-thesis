@@ -1,0 +1,6 @@
+~/ba-thesis/pure-asteroids$ stack exec -- bench-p 10000 0 100 0
+ran for 10009ms; rendered 340 frames
+
+~/ba-thesis/pure-asteroids$ stack exec -- bench-p 10000 0 500 100
+ran for 10026ms; rendered 170 frames
+

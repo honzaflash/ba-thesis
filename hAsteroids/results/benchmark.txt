@@ -1,0 +1,6 @@
+~/ba-thesis/hAsteroids$ stack exec -- bench-h 10000 0 100 0
+ran for 10035ms; rendered 209 frames
+
+~/ba-thesis/hAsteroids$ stack exec -- bench-h 10000 0 500 100
+ran for 10027ms; rendered 69 frames
+
