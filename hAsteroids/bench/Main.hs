@@ -158,10 +158,10 @@ gameLoop' prevTime deltaTime bench = do
         then liftIO $ print bench
         else -- Next frame
             gameLoop' (currentTime + delay)
-                     (min 64 $ elapsedTime + delay)
-                     bench { timer  = timer bench + elapsedTime
-                           , frameC = frameC bench + 1
-                           }
+                      (elapsedTime + delay)
+                      bench { timer  = timer bench + elapsedTime
+                            , frameC = frameC bench + 1
+                            }
 
     where
         -- locking fps

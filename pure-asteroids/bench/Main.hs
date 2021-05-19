@@ -179,7 +179,7 @@ gameLoop' r texts rand startTime deltaTime loopState prevInput wEvents oldW benc
 
     -- FPS management
     currentTime <- fromIntegral <$> SDL.ticks
-    (delay, elapsedTime) <- fmap (min 64) <$> lockFps (lockAt bench) currentTime
+    (delay, elapsedTime) <- lockFps (lockAt bench) currentTime
 
     if (newInput ^. quitEvent || timer bench > (runFor bench))
         then print bench

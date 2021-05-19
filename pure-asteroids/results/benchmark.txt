@@ -1,6 +1,37 @@
+~ compiled, run in a ubuntu VM with 4GM RAM ~
+
 ~/ba-thesis/pure-asteroids$ stack exec -- bench-p 10000 0 100 0
 ran for 10009ms; rendered 340 frames
 
 ~/ba-thesis/pure-asteroids$ stack exec -- bench-p 10000 0 500 100
 ran for 10026ms; rendered 170 frames
 
+~ in ghci on native windows ~
+
+ghci> :main 10000 0 1000 0 
+ran for 10134ms; rendered 9 frames
+
+ghci> :main 10000 0 500 0 
+ran for 10029ms; rendered 152 frames
+
+ghci> :main 10000 0 250 0
+ran for 10018ms; rendered 233 frames
+
+ghci> :main 10000 0 100 0
+ran for 10005ms; rendered 366 frames
+
+ghci> :main 10000 0 50 0
+ran for 10005ms; rendered 919 frames
+
+ghci> :main 10000 0 25 0
+ran for 10006ms; rendered 1399 frames
+
+ghci> :main 10000 0 10 0
+ran for 10001ms; rendered 1535 frames
+
+~ BONUS
+ghci> :main 10000 0 5 100
+ran for 10002ms; rendered 712 frames
+* the frame rate was higher than hAsteroids
+  so ufos were killed off in cca 8s therefore
+  the framerate went even higher

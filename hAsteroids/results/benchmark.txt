@@ -1,6 +1,38 @@
+~ compiled, run in a ubuntu VM with 4GM RAM ~
+
 ~/ba-thesis/hAsteroids$ stack exec -- bench-h 10000 0 100 0
 ran for 10035ms; rendered 209 frames
 
 ~/ba-thesis/hAsteroids$ stack exec -- bench-h 10000 0 500 100
 ran for 10027ms; rendered 69 frames
 
+~ in ghci on native windows ~
+
+ghci>:main 10000 0 10000 0
+ran for 10321ms; rendered 22 frames
+
+ghci> :main 10000 0 500 0
+ran for 10013ms; rendered 303 frames
+
+ghci> :main 10000 0 250 0
+ran for 10013ms; rendered 464 frames
+
+ghci> :main 10000 0 100 0
+ran for 10015ms; rendered 545 frames
+
+ghci> :main 10000 0 50 10
+ran for 10002ms; rendered 607 frames
+
+ghci> :main 10000 0 50 0
+ran for 10002ms; rendered 742 frames
+
+ghci> :main 10000 0 25 0 
+ran for 10001ms; rendered 1174 frames
+
+ghci> :main 10000 0 10 0
+ran for 10005ms; rendered 1413 frames
+
+~ BONUS
+ghci> :main 10000 0 5 100
+ran for 10119ms; rendered 124 frames
+* initially very slow, low fps -> low bullet count -> UFOs don't die
