@@ -20,6 +20,10 @@ characters delimited by white space"
    99   356  2583 src/Utility.hs
    67   172  1540 app/Main.hs
  1412  5461 42183 total
+
+# total lines of comments
+~/hs/thesis/hAsteroids$ cat src/*.hs app/Main.hs | grep -P "^\s*--.*$" -c
+114
 ```
 
 ### pure-asteroids
@@ -42,6 +46,10 @@ characters delimited by white space"
   109   540  3630 src/Step/Ufos.hs
    50   123  1167 app/Main.hs
  1430  5554 41843 total
+
+# total lines of comments
+~/hs/thesis/pure-asteroids$ cat src/*.hs app/Main.hs | grep -P "^\s*--.*$" -c
+50
 ```
 
 ### Asteroids by Jason Halverson
@@ -73,5 +81,9 @@ characters delimited by white space"
 
 ~/Asteroids$ wc -lwm *.h *.cpp | grep total
  2948  9449 86747 total
+
+# total lines of comments
+~/Asteroids$ cat *.cpp *.h uiDraw/* | grep -P "^\s*(//|\*|/\*).*$" -c
+858
 ```
 
