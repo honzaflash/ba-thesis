@@ -16,6 +16,8 @@ import qualified Data.HashMap.Strict as HM
 stepBullets :: Time -> InputState -> World -> Bullets -> (WorldEvents, Bullets)
 stepBullets dT input w =
     fmap (shoot input w) . traverse (stepBullet dT w) . filterDeadBullets
+    where
+        filterDeadBullets = HM.filter (\b -> b ^. bTtl > 0)
 
 
 -- | Step function for an individual Bullet
@@ -25,7 +27,7 @@ stepBullet dT w oldB =
     oldB
        & bPosition %~ move dT (oldB ^. bVelocity)
        -- mark bullet for death if it collided with anything
-       & bTtl %~ if nullEvents events then subtract dT else const (-1)
+       & bTtl %~ if nullEvents events then subtract dT else const 0
     
     where
         events = asteroidCollisionEvents 
@@ -116,9 +118,4 @@ shoot input w =
             Bullet newId newBulletPosition newBulletVelocity ShotByShip initBulletTtl
         newBulletPosition = w ^. wShip . sPosition
         newBulletVelocity = Velocity $ bulletSpeed *^ angle (w ^. wShip . sAngle)
-
-
--- | Filter out bullets that have no more Time To Live left
-filterDeadBullets :: Bullets -> Bullets
-filterDeadBullets = HM.filter (\b -> b ^. bTtl > 0)
 

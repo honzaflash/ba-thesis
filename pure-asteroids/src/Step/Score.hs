@@ -22,3 +22,4 @@ stepScore dT score =
         
         tenThousandReached =
             score ^. sValue > (1 + score ^. sLivesAwarded) * 10000
+

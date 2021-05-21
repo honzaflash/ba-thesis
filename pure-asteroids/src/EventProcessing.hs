@@ -75,7 +75,7 @@ processBulletEvents =
     flip $ foldl processBulletEvent
     where
         processBulletEvent :: Bullets -> BulletEvent -> Bullets
-        processBulletEvent bullets (UfoShootsE (pos, vel)) =
+        processBulletEvent bullets (UfoShootsE pos vel) =
             flip insertBullet bullets $
                 Bullet
                 { _bId = (+1) $ maximum $ 1 : HM.keys bullets

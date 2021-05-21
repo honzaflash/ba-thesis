@@ -148,7 +148,7 @@ nullEvents _                            = False
 
 -- * Individual event types
 
--- | Asteroid event
+-- | Asteroid event with an asteroid's ID
 newtype AsteroidEvent = 
     BreakE Int
     deriving Show
@@ -158,17 +158,17 @@ data ShipEvent =
     HitE | GainLifeE
     deriving Show
 
--- | Ufos event
+-- | Ufos event with a UFO's ID
 newtype UfoEvent = 
     DestroyE Int
     deriving Show
 
--- | Bullets event
-newtype BulletEvent = 
-    UfoShootsE (Position, Velocity)
+-- | Bullets event with bullet data
+data BulletEvent = 
+    UfoShootsE Position Velocity
     deriving Show
 
--- | Score event
+-- | Score event with number of points
 newtype ScoreEvent = 
     IncreaseE Int
     deriving Show

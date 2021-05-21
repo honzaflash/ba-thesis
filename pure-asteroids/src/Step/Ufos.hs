@@ -16,8 +16,8 @@ import Control.Lens
 
 stepUfos :: Time -> RandomStream Double -> World -> Ufos -> (WorldEvents, Ufos)
 stepUfos dT rand w =
-    fmap (filterOutDeadUfos . spawnUfo rand (w ^. wWaveTime)) .
-        traverse (stepUfo dT w)
+    fmap (spawnUfo rand (w ^. wWaveTime)) .
+        traverse (stepUfo dT w) . filterOutDeadUfos
     where
         filterOutDeadUfos = HM.filter $ (0 <) . view uTtl
 
@@ -46,7 +46,7 @@ stepUfo dT w oldU =
 
         -- generates an event for when a ufo shoots
         shootEvents =
-            [ UfoShootsE (oldU ^. uPosition, bulletVelocity)
+            [ UfoShootsE (oldU ^. uPosition) bulletVelocity
                 | oldU ^. uTimeToShoot <= 0 ]
         bulletVelocity =
             Velocity $ (ufoBulletSpeed *^) $ angle $
