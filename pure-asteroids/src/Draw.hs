@@ -63,7 +63,7 @@ drawAsteroid renderer a =
 
 
 drawUfo :: SDL.Renderer -> Ufo -> IO ()
-drawUfo renderer=
+drawUfo renderer =
     drawShape renderer . ufoPoints
 
 

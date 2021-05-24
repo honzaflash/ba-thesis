@@ -1,13 +1,16 @@
-# Game Development in Hskell
+# Game Development in Haskell
 
-I am currently in the state of analyzing and comparing the
-implementations including an already existing imperative one.
+There are two Atari Asteroids clones I created for
+the purposes of my thesis about gamedev in Haskell.
 
-## Instalation of the games
+They both differ from the original in some ways,
+more about them beneath the installation instructions.
 
-The [Haskell Stack](https://docs.haskellstack.org/en/stable/GUIDE/)
-tool is required for installation.
-You also need the `SDL` library, which can be installed like this:
+## Installation of the games
+
+The [Haskell Tool Stack](https://docs.haskellstack.org/en/stable/GUIDE/)
+is required for installation.
+You also need the `SDL` libraries, which can be installed like this:
 -  On Ubuntu
     ```
     sudo apt install libsdl2-dev libsdl2-ttf-dev libsdl2-image-dev
@@ -35,7 +38,8 @@ that I haven't looked into yet).
     ```
     For some reason I have issues with `stack build` on Windows
     so alternatively, you can use `stack ghci` and
-    run the `main` function yourself.
+    run the `main` function yourself from there.
+
     ```
     stack ghci
     main
@@ -76,7 +80,7 @@ the rules and general behaviour is the same.
     I consider optional for the purposes of my thesis
     but which would be nice.
 
-Each game has its own readme with more/other details.
+For more details look into the thesis :)
 
 ## Acknowledgements
 
@@ -93,3 +97,8 @@ that has a lot of insight on games in Haskell and Apecs
 - [Apecs:](https://github.com/jonascarpay/apecs) a fast, type-driven Entity-Component-System library for game programming by Jonas Carpay
     - with a great [demo/tutorial](https://github.com/jonascarpay/apecs/blob/master/examples/Shmup.md)
 
+## Interesting "bedtime" reads/watches :)
+
+- The famous [*Why Functional Programming Matters*](https://academic.oup.com/comjnl/article-pdf/32/2/98/1445644/320098.pdf)
+- [*Monads For Functional Programming*](http://staff.um.edu.mt/afra1/seminar/monads.pdf)
+- Simon P. Jones' talk - [Escape from the ivory tower: the Haskell journey](https://youtu.be/re96UgMk6GQ) 

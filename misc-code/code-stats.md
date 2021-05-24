@@ -22,7 +22,7 @@ characters delimited by white space"
  1412  5461 42183 total
 
 # total lines of comments
-~/hs/thesis/hAsteroids$ cat src/*.hs app/Main.hs | grep -P "^\s*--.*$" -c
+~/ba-thesis/hAsteroids$ cat src/*.hs app/Main.hs | grep -P "^\s*--.*$" -c
 114
 ```
 
@@ -48,7 +48,7 @@ characters delimited by white space"
  1430  5554 41843 total
 
 # total lines of comments
-~/hs/thesis/pure-asteroids$ cat src/*.hs app/Main.hs | grep -P "^\s*--.*$" -c
+~/ba-thesis/pure-asteroids$ cat src/*.hs app/Main.hs | grep -P "^\s*--.*$" -c
 50
 ```
 
