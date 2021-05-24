@@ -59,8 +59,11 @@ stepUfo dT w oldU =
 --   and returns an angle for the bullet's velocity
 predictiveShooting :: Ufo -> Ship -> Double
 predictiveShooting u s =
-    unangle (sPos - uPos) + asin (norm sVel * sin beta / ufoBulletSpeed)
-                   -- law of sines
+    unangle (sPos - uPos) +
+        case sVel of
+            V2 0 0 -> 0
+            _      -> asin (norm sVel * sin beta / ufoBulletSpeed)
+                      -- law of sines
     where
         beta = unangle (uPos - sPos) - unangle sVel
         sVel = s ^. sVelocity . vVect

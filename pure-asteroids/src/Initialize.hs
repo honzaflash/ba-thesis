@@ -27,9 +27,9 @@ initializeWorld =
 initializeShip :: Ship
 initializeShip =
     Ship
-    { _sPosition = Position $ V2 (windowHeightF/2) (windowWidthF/2)
+    { _sPosition = Position $ V2 (windowWidthF/2) (windowHeightF/2)
     , _sVelocity = Velocity $ V2 0 0
-    , _sAngle    = pi / 4 * 3
+    , _sAngle    = pi / 2 * 3
     , _sLives    = 3
     , _sState    = ShipAlive
     }

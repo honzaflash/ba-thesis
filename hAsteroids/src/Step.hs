@@ -95,15 +95,18 @@ ufosShoot dT (Ship _, Position shipPos, Velocity shipVel) =
                               , Velocity vel
                               , Ttl initUfoBulletTtl
                               )
-                    pure (Ufo 1000 size)
+                    pure (Ufo 1500 size)
 
 
 -- | Predicts ship's position based on its current velocity
 --   and returns an angle for the bullet's velocity
 predictiveShooting :: (Floating a, RealFrac a, Ord a) => V2 a -> V2 a -> V2 a -> a
 predictiveShooting uPos sPos sVel =
-    unangle (sPos - uPos) + asin (norm sVel * sin beta / ufoBulletSpeed)
-                   -- law of sines
+    unangle (sPos - uPos) +
+        case sVel of
+            V2 0 0 -> 0
+            _      -> asin (norm sVel * sin beta / ufoBulletSpeed)
+                      -- law of sines
     where
         beta = unangle (uPos - sPos) - unangle sVel
 
