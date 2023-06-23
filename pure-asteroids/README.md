@@ -22,21 +22,20 @@ Howerever, there are several features that...
   from the original
 
 ## How it works
-The game world variable goes through 2 functions that alter it
-every frame / loop iteration: `processEvents` and `stepWorld`.
+The game world object goes through two functions that alter it
+every frame/game loop iteration: `processEvents` and `stepWorld`.
 
-`stepWorld` updates positions, reacts to keyboard input and generates `WorldEvents` that are then processed next frame
+`stepWorld` updates positions, reacts to keyboard input and generates `WorldEvents`. Events are then processed next frame
 by the `processEvents` function.
 
 `stepWorld` is decomposed into `step<EntityCollection>`
 functions that could run in parallel.
-For one entity from collection A to alter other from collection B,
+For one entity from collection A to interact with another from collection B,
 it must send a request in form of an event that will be processed
-next frame by the `process<EntityCollectionB>Events`.
+next frame by the `process<EntityCollectionB>Events` in `processEvents`.
 
 This way the functions for the individual entity collections
-could run in parallel with one sync point every frame, where
-the events are exchanged.
+could run in parallel, synchronizing once every frame by exchanging events.
 
 `drawWorld` is separate and only reads the data, can't alter it.
 
