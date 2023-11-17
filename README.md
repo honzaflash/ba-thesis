@@ -6,6 +6,15 @@ the purposes of my thesis about gamedev in Haskell.
 They both differ from the original in some ways,
 more about them beneath the installation instructions.
 
+### The thesis
+The pdf document is in the root direcotry of the repository.
+There is also a [submodule](https://github.com/honzaflash/ba-thesis-tex/tree/f17bef03e3f3e066e09cb174e3ec07f2ef2d74ee)
+with all the sources the pdf was built from using LaTeX.
+
+The thesis as it was submitted is also available with reviews of the supervisor and the reader
+in the [MUNI archive](https://is.muni.cz/th/zedur/?lang=en) with all of its atachments.
+Despite some room for improvement, the defense was successful and the thesis received an **A**.
+
 ## Installation of the games
 
 The [Haskell Tool Stack](https://docs.haskellstack.org/en/stable/GUIDE/)
