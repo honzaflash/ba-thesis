@@ -89,6 +89,9 @@ gameLoop r texts rand startTime deltaTime loopState prevInput wEvents oldW = do
                     | wasPressed input spaceKeycode     -> Playing
                     | wasPressed input escapeKeycode    -> QuitGame
                     | otherwise                         -> loopState
+                -- never actually executed because `gameLoop` exits
+                QuitGame                                -> loopState
+
         isRespawning (ShipRespawning _) = True
         isRespawning  _                 = False
 

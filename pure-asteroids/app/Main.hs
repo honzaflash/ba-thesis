@@ -20,7 +20,7 @@ main = do
 
     SDL.initialize [SDL.InitVideo]
     FNT.initialize
-    
+
     window <-
         SDL.createWindow "pure-asteroids"
             SDL.defaultWindow
@@ -38,7 +38,7 @@ main = do
     texts <- loadTexts renderer
 
     seed <- round <$> SDL.time
-    let rand = randStreamGen (0, 100) $ seed
+    let rand = randStreamGen (0, 100) seed
 
     gameLoop renderer texts rand 0 16 MainMenu mempty mempty initializeWorld
         `catch` \(e :: SomeException) -> putStrLn ("Whoopsie: " ++ show e)

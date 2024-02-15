@@ -51,10 +51,11 @@ stepBullet dT w oldB =
         isInside a = (fromIntegral (a ^. aSize) >) . distance (a ^. aPosition . pVect)
         
         astReward a
-            | a ^. aSize == initAsteroidSize                 = 20
-            | a ^. aSize == initAsteroidSize `div` 2         = 50
-            | a ^. aSize == initAsteroidSize `div` 2 `div` 2 = 100
-            -- otherwise = boom! something is very wrong
+            | a ^. aSize == initAsteroidSize         = 20
+            | a ^. aSize == initAsteroidSize `div` 2 = 50
+            | a ^. aSize == initAsteroidSize `div` 4 = 100
+            -- should never happen, minimum size is a quarter
+            | otherwise                              = 0
 
         -- Collision with SHIP
         shipCollisionEvents =
