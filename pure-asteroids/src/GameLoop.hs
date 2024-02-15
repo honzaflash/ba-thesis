@@ -34,6 +34,7 @@ gameLoop
     -> IO ()
 gameLoop r texts rand startTime deltaTime loopState prevInput wEvents oldW = do
 
+    SDL.pumpEvents -- update the event queue
     newInput <- processInput prevInput <$> SDL.pollEvents
 
     -- World updating
