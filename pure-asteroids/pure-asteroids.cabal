@@ -1,0 +1,75 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.36.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           pure-asteroids
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/honzaflash/ba-thesis/pure-asteroids#readme>
+homepage:       https://github.com/honzaflash/ba-thesis#readme
+bug-reports:    https://github.com/honzaflash/ba-thesis/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2021 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/honzaflash/ba-thesis
+  subdir: pure-asteroids
+
+library
+  exposed-modules:
+      Draw
+      EventProcessing
+      GameLoop
+      Initialize
+      Input
+      Resources
+      Step
+      Step.Asteroids
+      Step.Bullets
+      Step.Common
+      Step.Score
+      Step.Ship
+      Step.Ufos
+      Types
+      Utility
+  other-modules:
+      Paths_pure_asteroids
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+    , hashable
+    , lens
+    , linear
+    , random >=1.2
+    , sdl2 >=2.5
+    , sdl2-ttf
+    , unordered-containers
+  default-language: Haskell2010
+
+executable pure-asteroids-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_pure_asteroids
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , hashable
+    , lens
+    , linear
+    , pure-asteroids
+    , random >=1.2
+    , sdl2 >=2.5
+    , sdl2-ttf
+    , unordered-containers
+  default-language: Haskell2010
